@@ -302,17 +302,21 @@ p,
   padding: calc(var(--l-space-5) + 4px) var(--l-space-5) var(--l-space-3);
 }
 
-/* Count and location filter share the line under the title. The count holds
-   the left edge; the filter and the layout toggle group at the right. */
+/* Title and count stack on the left; the location field and filter button sit
+   at the right, centred against that whole stack rather than one line of it. */
 .results-meta {
   display: flex;
   align-items: center;
   gap: var(--l-space-2);
-  margin-top: 2px;
 }
 
-.results-meta > p {
+.results-headline {
   margin-right: auto;
+  min-width: 0;
+}
+
+.results-headline > p {
+  margin-top: 2px;
 }
 
 /* Location typeahead in the results header: pin sits inside the field, which
@@ -1307,6 +1311,23 @@ p,
 /* Rows that aren't cards (empty state, show-more) still read as white. */
 .results-list > div {
   background: #fff;
+}
+
+/* Marks where exact matches end and the backfilled near matches begin, so a
+   short list padded out to 25 doesn't read as 25 suppliers meeting every answer. */
+.results-list > .near-match-note {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  padding: var(--l-space-3) var(--l-space-5);
+  background: var(--l-color-blue-10);
+  color: var(--l-color-darkblue-75);
+  font-size: var(--l-font-size-smaller);
+}
+
+.near-match-note l-icon {
+  color: var(--l-color-blue-100);
+  flex-shrink: 0;
 }
 
 /* Supplier card — content and type scale follow the SRP reference card:

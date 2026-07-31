@@ -7,20 +7,22 @@ import { SiteNavbar } from "@/components/site-navbar";
 import { SupplierResults } from "@/components/supplier-results";
 import { ThinkingIndicator } from "@/components/thinking-indicator";
 import {
-  candidatesFor,
-  CORE_QUESTION_COUNT,
+  ASK_COUNT,
   FREE_TEXT_ENABLED,
   impliedAnswers,
   introSummary,
+  MATCH_FLOOR,
+  matchSetFor,
   mergeParsedAnswers,
   nextAsk,
   parseInitialQuery,
   questionById,
   routesOutToDeepDrawing,
+  simulatedMatchCount,
   type LoggedAnswer,
   type NextAsk,
 } from "@/lib/simulation";
-import { CATEGORY_LABEL, scaleToCategory } from "@/lib/suppliers";
+import { CATEGORY_LABEL } from "@/lib/suppliers";
 
 const WELCOME = "Tell us about your need and we'll refine your results.";
 
@@ -34,7 +36,16 @@ type TranscriptEntry =
   | { kind: "user"; id: number; text: string }
   | { kind: "assistant"; id: number; text: string; logged?: LoggedAnswer[]; matchCount?: number }
   /** Terminal step: the run is over, either quotable or routed to another family. */
-  | { kind: "done"; id: number; routed?: boolean; text?: string; matched?: number }
+  | {
+      kind: "done";
+      id: number;
+      routed?: boolean;
+      text?: string;
+      /** Suppliers in the category still matching everything logged. */
+      matched?: number;
+      /** How many of them the results rail is showing. */
+      shortlist?: number;
+    }
   | {
       kind: "ask";
       id: number;
@@ -107,17 +118,12 @@ export function SourcingExperience() {
 
   const endDrag = useCallback(() => setDragging(false), []);
 
-  /** Queue the next core question, or wrap up when nothing is left worth asking. */
+  /** Queue the next question, or wrap up when nothing is left worth asking. */
   const advance = useCallback(
     (currentAnswers: LoggedAnswer[]) => {
       setThinking(true);
       later(700, () => {
         setThinking(false);
-        const ask = nextAsk(currentAnswers);
-        if (ask) {
-          setTranscript((entries) => [...entries, { kind: "ask", id: nextId(), ask, status: "active" }]);
-          return;
-        }
         if (routesOutToDeepDrawing(currentAnswers)) {
           setTranscript((entries) => [
             ...entries,
@@ -130,10 +136,24 @@ export function SourcingExperience() {
           ]);
           return;
         }
-        const matched = scaleToCategory(candidatesFor(currentAnswers).length);
+        // Once the category is down to a handful, another question would thin
+        // it past what anyone can quote against, so the run ends on the
+        // shortlist it has rather than asking one.
+        const matched = simulatedMatchCount(currentAnswers);
+        const ask = matched < MATCH_FLOOR ? null : nextAsk(currentAnswers);
+        if (ask) {
+          setTranscript((entries) => [...entries, { kind: "ask", id: nextId(), ask, status: "active" }]);
+          return;
+        }
+        const matchSet = matchSetFor(currentAnswers);
         setTranscript((entries) => [
           ...entries,
-          { kind: "done", id: nextId(), matched },
+          {
+            kind: "done",
+            id: nextId(),
+            matched,
+            shortlist: matchSet.matches.length + matchSet.near.length,
+          },
         ]);
       });
     },
@@ -172,7 +192,7 @@ export function SourcingExperience() {
             id: nextId(),
             text: introSummary(parsed),
             logged: all,
-            matchCount: scaleToCategory(candidatesFor(all).length),
+            matchCount: simulatedMatchCount(all),
           },
         ]);
         advance(all);
@@ -257,7 +277,7 @@ export function SourcingExperience() {
             id: nextId(),
             text: "Logged — the match list is updated.",
             logged: added,
-            matchCount: scaleToCategory(candidatesFor(merged).length),
+            matchCount: simulatedMatchCount(merged),
           },
         ]);
       });
@@ -369,11 +389,11 @@ export function SourcingExperience() {
   const hasActiveAsk = activeAsk != null;
   const started = transcript.some((entry) => entry.kind === "user");
   /** Suppliers still matching everything logged — the header's live count. */
-  const liveMatch = scaleToCategory(candidatesFor(answers).length);
+  const liveMatch = simulatedMatchCount(answers);
   const canGoBack = transcript.some((entry) => entry.kind === "ask" && entry.status !== "active");
   /** Questions put to bed, so the header bar tracks how far along the run is. */
   const settled = Math.min(
-    CORE_QUESTION_COUNT,
+    ASK_COUNT,
     transcript.filter((entry) => entry.kind === "ask" && entry.status !== "active").length,
   );
   // Numbered by the order they were actually asked, so the run reads 1, 2, 3
@@ -444,10 +464,10 @@ export function SourcingExperience() {
                 role="progressbar"
                 aria-label="Questions answered"
                 aria-valuemin={0}
-                aria-valuemax={CORE_QUESTION_COUNT}
+                aria-valuemax={ASK_COUNT}
                 aria-valuenow={settled}
               >
-                <span style={{ width: `${(settled / CORE_QUESTION_COUNT) * 100}%` }} />
+                <span style={{ width: `${(settled / ASK_COUNT) * 100}%` }} />
               </div>
             </div>
             <div className="agent-body" ref={scrollRef} data-floating-actions={activeAsk ? true : undefined}>
@@ -514,7 +534,11 @@ export function SourcingExperience() {
                         <p className="mar-0 done-copy">
                           {entry.routed
                             ? entry.text
-                            : `You can restart your search any time or close the agent below.${
+                            : `${
+                                entry.shortlist
+                                  ? `The ${entry.shortlist} best-matched are ranked in your results. `
+                                  : ""
+                              }You can restart your search any time or close the agent below.${
                                 FREE_TEXT_ENABLED
                                   ? " You can also keep typing details like certifications, industry, or supplier location."
                                   : ""
@@ -539,7 +563,7 @@ export function SourcingExperience() {
                     status={entry.status}
                     answer={entry.answer}
                     position={askPositions.get(entry.id) ?? 1}
-                    total={CORE_QUESTION_COUNT}
+                    total={ASK_COUNT}
                     picked={picked}
                     onSelect={selectOption}
                     onEdit={entry.status === "active" ? undefined : () => reopenAsk(entry.id)}
