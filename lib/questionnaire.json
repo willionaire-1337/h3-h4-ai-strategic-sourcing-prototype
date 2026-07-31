@@ -1,0 +1,1672 @@
+[
+  {
+    "id": "process",
+    "rank": "Q1",
+    "importance": 96,
+    "title": "Stamping process / press method",
+    "tier": "core",
+    "multi": false,
+    "ask": "Which stamping process does your part need?",
+    "hint": "Attribute 31128 Capabilities. Deep-draw parts (depth greater than diameter) are quoted by the Deep Drawing Services family, not here.",
+    "options": [
+      {
+        "value": "Progressive Die",
+        "note": "1007308 \u00b7 multi-stage, one dieset, coil-fed",
+        "taxonomyId": "78654001"
+      },
+      {
+        "value": "Transfer Die",
+        "note": "1007360 \u00b7 part carried between dies",
+        "taxonomyId": "79380721"
+      },
+      {
+        "value": "Transfer Press",
+        "note": "1007853 \u00b7 press-level transfer",
+        "taxonomyId": "62781661"
+      },
+      {
+        "value": "Punch Press",
+        "note": "996936 \u00b7 single-station punch press",
+        "taxonomyId": "62781661"
+      },
+      {
+        "value": "Compound Die",
+        "note": "1007307 \u00b7 cut + form in one stroke",
+        "taxonomyId": "78361003"
+      },
+      {
+        "value": "Fourslide",
+        "note": "1007220 \u00b7 wireform-style bends",
+        "taxonomyId": "78520301"
+      },
+      {
+        "value": "Multislide\u00ae",
+        "note": "1007839 \u00b7 Multislide\u00ae",
+        "taxonomyId": "78570207"
+      },
+      {
+        "value": "Fine blanking",
+        "note": "1007362 \u00b7 fully sheared, no die-roll",
+        "taxonomyId": "29420601"
+      },
+      {
+        "value": "Blanking only",
+        "note": "1007309",
+        "taxonomyId": "5432679"
+      },
+      {
+        "value": "Coining",
+        "note": "1007225",
+        "taxonomyId": "97007055"
+      },
+      {
+        "value": "Reel-to-reel",
+        "note": "1007364 \u00b7 continuous carrier",
+        "taxonomyId": "97003698"
+      },
+      {
+        "value": "Robotic stamping",
+        "note": "965919",
+        "taxonomyId": "97002094"
+      },
+      {
+        "value": "High speed",
+        "note": "965653 \u00b7 hundreds of parts/min",
+        "taxonomyId": "7683"
+      },
+      {
+        "value": "Deep drawing",
+        "note": "routes to Deep Drawing Services family",
+        "taxonomyId": "21911300",
+        "routesToDeepDrawing": true
+      },
+      {
+        "value": "Not sure \u2014 recommend",
+        "note": "agent proposes from part geometry",
+        "taxonomyId": "97001062"
+      }
+    ]
+  },
+  {
+    "id": "material",
+    "rank": "Q2",
+    "importance": 94,
+    "title": "Material",
+    "tier": "core",
+    "multi": false,
+    "ask": "What material will the part be stamped from?",
+    "hint": "Attribute 28258 Materials \u2014 all 39 values from the export. Cold work raises surface hardness; brittle grades may need inter-stage annealing.",
+    "options": [
+      {
+        "value": "Metal",
+        "note": "908908 \u00b7 16 suppliers",
+        "taxonomyId": "78560109"
+      },
+      {
+        "value": "Aluminum",
+        "note": "907909 \u00b7 2 suppliers",
+        "taxonomyId": "78270204"
+      },
+      {
+        "value": "Sheet Metal",
+        "note": "908916 \u00b7 2 suppliers",
+        "taxonomyId": "78680154"
+      },
+      {
+        "value": "Brass",
+        "note": "907925 \u00b7 1 suppliers",
+        "taxonomyId": "78330404"
+      },
+      {
+        "value": "Bronze",
+        "note": "908831 \u00b7 1 suppliers",
+        "taxonomyId": "78330404"
+      },
+      {
+        "value": "Copper",
+        "note": "907931 \u00b7 1 suppliers",
+        "taxonomyId": "78330404"
+      },
+      {
+        "value": "Precious Metals",
+        "note": "907956 \u00b7 1 suppliers",
+        "taxonomyId": "78630605"
+      },
+      {
+        "value": "Stainless Steel",
+        "note": "907964 \u00b7 1 suppliers",
+        "taxonomyId": "79340808"
+      },
+      {
+        "value": "Steel",
+        "note": "907965 \u00b7 1 suppliers",
+        "taxonomyId": "79360202"
+      },
+      {
+        "value": "Beryllium Copper",
+        "note": "908896",
+        "taxonomyId": "78320603"
+      },
+      {
+        "value": "Beryllium Nickel",
+        "note": "1030548",
+        "taxonomyId": "97008178"
+      },
+      {
+        "value": "Bi-Metal",
+        "note": "908830",
+        "taxonomyId": "96013289"
+      },
+      {
+        "value": "Carbon Steel",
+        "note": "908897",
+        "taxonomyId": "78350006"
+      },
+      {
+        "value": "Cobalt Steel",
+        "note": "908898",
+        "taxonomyId": "97002022"
+      },
+      {
+        "value": "Exotic Metal Alloy",
+        "note": "908900",
+        "taxonomyId": "96067566"
+      },
+      {
+        "value": "Ferrous",
+        "note": "908901",
+        "taxonomyId": "78500303"
+      },
+      {
+        "value": "Fibre",
+        "note": "908902",
+        "taxonomyId": "78500402"
+      },
+      {
+        "value": "Foil",
+        "note": "911470",
+        "taxonomyId": "78520202"
+      },
+      {
+        "value": "Gold",
+        "note": "907937",
+        "taxonomyId": "2332"
+      },
+      {
+        "value": "Kapton\u00ae",
+        "note": "997909",
+        "taxonomyId": "97012794"
+      },
+      {
+        "value": "Kovar\u00ae",
+        "note": "908905",
+        "taxonomyId": "96002589"
+      },
+      {
+        "value": "Lead",
+        "note": "907944",
+        "taxonomyId": "78540408"
+      },
+      {
+        "value": "Leather",
+        "note": "908906",
+        "taxonomyId": "78540804"
+      },
+      {
+        "value": "Magnesium",
+        "note": "907947",
+        "taxonomyId": "78541208"
+      },
+      {
+        "value": "Manganese Steel",
+        "note": "908907",
+        "taxonomyId": "78550209"
+      },
+      {
+        "value": "Mica",
+        "note": "908909",
+        "taxonomyId": "78560208"
+      },
+      {
+        "value": "Nickel",
+        "note": "907951",
+        "taxonomyId": "78600400"
+      },
+      {
+        "value": "Nickel Alloy",
+        "note": "908835",
+        "taxonomyId": "78600400"
+      },
+      {
+        "value": "Nickel Steel",
+        "note": "908839",
+        "taxonomyId": "78610201"
+      },
+      {
+        "value": "Nitinol\u00ae",
+        "note": "908910",
+        "taxonomyId": "96129879"
+      },
+      {
+        "value": "Non-Metallic",
+        "note": "908911",
+        "taxonomyId": "78620101"
+      },
+      {
+        "value": "PTFE",
+        "note": "908918",
+        "taxonomyId": "97008929"
+      },
+      {
+        "value": "Plastics",
+        "note": "908912",
+        "taxonomyId": "78620804"
+      },
+      {
+        "value": "Rubber",
+        "note": "908915",
+        "taxonomyId": "95916110"
+      },
+      {
+        "value": "Solder",
+        "note": "907963",
+        "taxonomyId": "76250604"
+      },
+      {
+        "value": "Spring Steel",
+        "note": "908917",
+        "taxonomyId": "79335006"
+      },
+      {
+        "value": "Tempered Steel",
+        "note": "908919",
+        "taxonomyId": "79380309"
+      },
+      {
+        "value": "Titanium",
+        "note": "907972",
+        "taxonomyId": "79380606"
+      },
+      {
+        "value": "Wire Cloth / Woven Wire",
+        "note": "908920",
+        "taxonomyId": "79381000"
+      }
+    ]
+  },
+  {
+    "id": "stock",
+    "rank": "Q3",
+    "importance": 90,
+    "title": "Stock thickness & feed format",
+    "tier": "core",
+    "multi": false,
+    "ask": "How thick is the material?",
+    "hint": "Numeric thickness has no taxonomy node, but gauge class and feed format do. Gauge trap: sheet steel uses MSG, nonferrous uses B&S/AWG \u2014 12 ga steel = 0.1046\", 12 ga aluminum = 0.0808\".",
+    "options": [
+      {
+        "value": "Foil gauge",
+        "note": "911470",
+        "taxonomyId": "78520202"
+      },
+      {
+        "value": "Thin gauge",
+        "note": "1007864",
+        "taxonomyId": "97012658"
+      },
+      {
+        "value": "Thin wall",
+        "note": "1006889",
+        "taxonomyId": "97002028"
+      },
+      {
+        "value": "Standard gauge",
+        "note": "no dedicated node"
+      },
+      {
+        "value": "Heavy gauge",
+        "note": "1007856",
+        "taxonomyId": "78520525"
+      },
+      {
+        "value": "Continuous strip feed",
+        "note": "1007831",
+        "taxonomyId": "95919536"
+      },
+      {
+        "value": "Sheet / blank feed",
+        "note": "908916 \u00b7 2 suppliers",
+        "taxonomyId": "78680154"
+      },
+      {
+        "value": "Coil feed",
+        "note": "no dedicated node"
+      }
+    ]
+  },
+  {
+    "id": "qty",
+    "rank": "Q4",
+    "importance": 88,
+    "title": "Quantity & production volume",
+    "tier": "core",
+    "multi": false,
+    "ask": "How many parts do you need?",
+    "hint": "Attribute 492 Production Volume \u2014 die amortization makes stamping economics volume-driven.",
+    "options": [
+      {
+        "value": "Prototype",
+        "note": "881268 \u00b7 1 suppliers",
+        "taxonomyId": "78655008"
+      },
+      {
+        "value": "Short Run",
+        "note": "881269 \u00b7 stock tooling",
+        "taxonomyId": "79140208"
+      },
+      {
+        "value": "Production Runs",
+        "note": "965372 \u00b7 4 suppliers",
+        "taxonomyId": "96013743"
+      },
+      {
+        "value": "Long Run",
+        "note": "908952",
+        "taxonomyId": "78540903"
+      },
+      {
+        "value": "High Volume",
+        "note": "881267 \u00b7 2 suppliers",
+        "taxonomyId": "78520657"
+      },
+      {
+        "value": "Order pattern: one-time / blanket / recurring releases"
+      }
+    ]
+  },
+  {
+    "id": "size",
+    "rank": "Q5",
+    "importance": 84,
+    "title": "Part size & complexity",
+    "tier": "core",
+    "multi": false,
+    "ask": "Roughly how big is the part?",
+    "hint": "Size classes are real capability values; the numeric envelope is not. Formed depth greater than width flips the job to deep drawing.",
+    "options": [
+      {
+        "value": "Micro",
+        "note": "1007363 \u00b7 2 suppliers",
+        "taxonomyId": "95924544"
+      },
+      {
+        "value": "Microminiature",
+        "note": "965680",
+        "taxonomyId": "78560224"
+      },
+      {
+        "value": "Subminiature",
+        "note": "1007863",
+        "taxonomyId": "79363206"
+      },
+      {
+        "value": "Miniature",
+        "note": "965678",
+        "taxonomyId": "95961371"
+      },
+      {
+        "value": "Small",
+        "note": "1007862 \u00b7 1 suppliers",
+        "taxonomyId": "79240404"
+      },
+      {
+        "value": "Medium-to-large",
+        "note": "1007861",
+        "taxonomyId": "95962734"
+      },
+      {
+        "value": "Complex geometry",
+        "note": "1007855",
+        "taxonomyId": "78360609"
+      },
+      {
+        "value": "Intricate detail",
+        "note": "1007858",
+        "taxonomyId": "78520806"
+      },
+      {
+        "value": "Deep drawn — formed depth greater than width",
+        "taxonomyId": "21911300",
+        "routesToDeepDrawing": true
+      }
+    ]
+  },
+  {
+    "id": "tooling",
+    "rank": "Q6",
+    "importance": 80,
+    "title": "Tooling & die status",
+    "tier": "core",
+    "multi": false,
+    "ask": "What's the tooling situation?",
+    "hint": "Dies dominate cost and lead time. Ownership and amortization terms have no taxonomy node.",
+    "options": [
+      {
+        "value": "New die design & build",
+        "note": "1007311",
+        "taxonomyId": "78474004"
+      },
+      {
+        "value": "Open / stock tooling",
+        "note": "1007840 \u00b7 no die investment",
+        "taxonomyId": "96202353"
+      },
+      {
+        "value": "Custom-engineered tooling",
+        "note": "880862 \u00b7 2 suppliers",
+        "taxonomyId": "78362001"
+      },
+      {
+        "value": "Existing die \u2014 transfer to new supplier"
+      }
+    ]
+  },
+  {
+    "id": "tol",
+    "rank": "Q8",
+    "importance": 70,
+    "title": "Tolerance & precision class",
+    "tier": "adaptive",
+    "multi": false,
+    "ask": "How tight are the tolerances?",
+    "hint": "Attribute 31128 Capabilities.",
+    "options": [
+      {
+        "value": "Standard commercial tolerance"
+      },
+      {
+        "value": "Close tolerance",
+        "note": "965676",
+        "taxonomyId": "95914222"
+      },
+      {
+        "value": "Precision",
+        "note": "965679 \u00b7 4 suppliers",
+        "taxonomyId": "78630803"
+      },
+      {
+        "value": "High precision",
+        "note": "965677 \u00b7 2 suppliers",
+        "taxonomyId": "96004619"
+      }
+    ]
+  },
+  {
+    "id": "loc",
+    "rank": "Q9",
+    "importance": 60,
+    "title": "Supplier location",
+    "tier": "adaptive",
+    "multi": false,
+    "ask": "Should suppliers be limited by location?",
+    "hint": "Geography is a Supplier Discovery search filter (no heading). Choose how to constrain the supplier pool; distinct from Q7 ship-to, which is the part destination.",
+    "options": [
+      {
+        "value": "Anywhere \u2014 no preference",
+        "note": "default"
+      },
+      {
+        "value": "Within radius of a ZIP",
+        "note": "ZIP + radius inputs below",
+        "taxonomyId": "geo"
+      },
+      {
+        "value": "Specific state(s)",
+        "note": "state multi-select below",
+        "taxonomyId": "geo"
+      },
+      {
+        "value": "Domestic (USA) only",
+        "note": "pairs with Made in the USA / Buy American certs",
+        "taxonomyId": "geo"
+      },
+      {
+        "value": "Radius: 50 / 100 / 250 / 500 mi",
+        "taxonomyId": "geo"
+      }
+    ]
+  },
+  {
+    "id": "features",
+    "rank": "Q10",
+    "importance": 55,
+    "title": "Features & secondary operations",
+    "tier": "adaptive",
+    "multi": true,
+    "ask": "Does the part need anything beyond the stamping itself?",
+    "hint": "Attribute 28748 Stamping Features plus in-press capabilities and attribute 28031 Additional Services.",
+    "options": [
+      {
+        "value": "Heat treated",
+        "note": "908959",
+        "taxonomyId": "78520491"
+      },
+      {
+        "value": "Tapped",
+        "note": "908966",
+        "taxonomyId": "79380200"
+      },
+      {
+        "value": "Embossed",
+        "note": "908956",
+        "taxonomyId": "97004452"
+      },
+      {
+        "value": "Countersunk",
+        "note": "908954",
+        "taxonomyId": "97004453"
+      },
+      {
+        "value": "Flat / flatness critical",
+        "note": "908958",
+        "taxonomyId": "78515004"
+      },
+      {
+        "value": "Shape critical",
+        "note": "908963",
+        "taxonomyId": "78679156"
+      },
+      {
+        "value": "Surface critical (Class A)",
+        "note": "908965",
+        "taxonomyId": "97004451"
+      },
+      {
+        "value": "Coated",
+        "note": "908860",
+        "taxonomyId": "79380267"
+      },
+      {
+        "value": "Enameled",
+        "note": "908957",
+        "taxonomyId": "78500204"
+      },
+      {
+        "value": "Decorative / ornamental",
+        "note": "908961",
+        "taxonomyId": "78365202"
+      },
+      {
+        "value": "Strain relief",
+        "note": "908964",
+        "taxonomyId": "97005019"
+      },
+      {
+        "value": "Cruciform",
+        "note": "908955",
+        "taxonomyId": "97005258"
+      },
+      {
+        "value": "In-die assembly",
+        "note": "1033204",
+        "taxonomyId": "97010148"
+      },
+      {
+        "value": "Assembly",
+        "note": "907345 \u00b7 stamped assemblies",
+        "taxonomyId": "78290004"
+      },
+      {
+        "value": "Engineering / design assistance",
+        "note": "907346",
+        "taxonomyId": "95927604"
+      },
+      {
+        "value": "Laminated",
+        "note": "1007006",
+        "taxonomyId": "78540200"
+      },
+      {
+        "value": "Perforated",
+        "note": "1007841",
+        "taxonomyId": "78620606"
+      },
+      {
+        "value": "Fully sheared edges",
+        "note": "1007838",
+        "taxonomyId": "97003098"
+      },
+      {
+        "value": "High strength",
+        "note": "1007857",
+        "taxonomyId": "78520616"
+      },
+      {
+        "value": "Contract manufacturing",
+        "note": "907726 \u00b7 1 suppliers",
+        "taxonomyId": "97003671"
+      },
+      {
+        "value": "Deburring / edge finishing",
+        "note": "burrs are inherent to stamping"
+      },
+      {
+        "value": "Plating"
+      }
+    ]
+  },
+  {
+    "id": "part",
+    "rank": "Q11",
+    "importance": 45,
+    "title": "Part type",
+    "tier": "adaptive",
+    "multi": false,
+    "ask": "What is the part, in plain terms?",
+    "hint": "Attribute 28739 Stamping Products \u2014 all 18 values from the export.",
+    "options": [
+      {
+        "value": "End Caps",
+        "note": "908971 \u00b7 1 suppliers",
+        "taxonomyId": "78500246"
+      },
+      {
+        "value": "Connectors",
+        "note": "908861",
+        "taxonomyId": "96023700"
+      },
+      {
+        "value": "Electronic Connectors",
+        "note": "908970",
+        "taxonomyId": "96195573"
+      },
+      {
+        "value": "Filter Components",
+        "note": "909749",
+        "taxonomyId": "97004745"
+      },
+      {
+        "value": "Furniture Parts",
+        "note": "908972",
+        "taxonomyId": "96124110"
+      },
+      {
+        "value": "Fuses",
+        "note": "908973",
+        "taxonomyId": "78520350"
+      },
+      {
+        "value": "Hardware",
+        "note": "909750",
+        "taxonomyId": "78520467"
+      },
+      {
+        "value": "Heatsinks",
+        "note": "909751",
+        "taxonomyId": "96173687"
+      },
+      {
+        "value": "Inflators",
+        "note": "908975",
+        "taxonomyId": "97005257"
+      },
+      {
+        "value": "Lead Frames",
+        "note": "909753",
+        "taxonomyId": "78540457"
+      },
+      {
+        "value": "Mass Volume Parts",
+        "note": "1007859",
+        "taxonomyId": "95927596"
+      },
+      {
+        "value": "Medical Diaphragms",
+        "note": "909755",
+        "taxonomyId": "96168786"
+      },
+      {
+        "value": "Pressure Vessels",
+        "note": "909757",
+        "taxonomyId": "97005259"
+      },
+      {
+        "value": "Printed Circuit Contacts",
+        "note": "908977",
+        "taxonomyId": "95938593"
+      },
+      {
+        "value": "Printer Cartridge Blades",
+        "note": "909758",
+        "taxonomyId": "78323003"
+      },
+      {
+        "value": "Sensor Components",
+        "note": "909759",
+        "taxonomyId": "96195581"
+      },
+      {
+        "value": "Service Parts",
+        "note": "909760",
+        "taxonomyId": "97004826"
+      },
+      {
+        "value": "Surface Mount Pins",
+        "note": "908978",
+        "taxonomyId": "95938619"
+      }
+    ]
+  },
+  {
+    "id": "app",
+    "rank": "Q12",
+    "importance": 40,
+    "title": "Industry & application",
+    "tier": "adaptive",
+    "multi": true,
+    "ask": "What industry is this for?",
+    "hint": "Two attributes: 44 Industry Focus (9 values) and 5 Intended Application (16 values).",
+    "options": [
+      {
+        "value": "Aerospace",
+        "note": "879450",
+        "taxonomyId": "78230000"
+      },
+      {
+        "value": "Agriculture",
+        "note": "882780",
+        "taxonomyId": "95921581"
+      },
+      {
+        "value": "Automotive",
+        "note": "879452 \u00b7 2 suppliers",
+        "taxonomyId": "78300407"
+      },
+      {
+        "value": "Construction",
+        "note": "891994",
+        "taxonomyId": "78361151"
+      },
+      {
+        "value": "Electrical",
+        "note": "895056 \u00b7 1 suppliers",
+        "taxonomyId": "96167804"
+      },
+      {
+        "value": "Electronics",
+        "note": "904084 \u00b7 1 suppliers",
+        "taxonomyId": "78480209"
+      },
+      {
+        "value": "Medical and Dental",
+        "note": "879457 \u00b7 1 suppliers",
+        "taxonomyId": "78550407"
+      },
+      {
+        "value": "Semiconductor",
+        "note": "879851",
+        "taxonomyId": "78670205"
+      },
+      {
+        "value": "Telecommunications",
+        "note": "880871",
+        "taxonomyId": "95914230"
+      },
+      {
+        "value": "Air Bags",
+        "note": "908856",
+        "taxonomyId": "96173679"
+      },
+      {
+        "value": "Aircraft",
+        "note": "895532",
+        "taxonomyId": "78250404"
+      },
+      {
+        "value": "All Terrain Vehicles (ATV)",
+        "note": "966888",
+        "taxonomyId": "96064324"
+      },
+      {
+        "value": "Appliances",
+        "note": "888909 \u00b7 1 suppliers",
+        "taxonomyId": "78276003"
+      },
+      {
+        "value": "Batteries",
+        "note": "889389",
+        "taxonomyId": "95924460"
+      },
+      {
+        "value": "Carrier Circuits",
+        "note": "925166",
+        "taxonomyId": "95938577"
+      },
+      {
+        "value": "Cathode Ray Tubes (CRT)",
+        "note": "897532",
+        "taxonomyId": "95924452"
+      },
+      {
+        "value": "Cleanrooms",
+        "note": "905524",
+        "taxonomyId": "78355005"
+      },
+      {
+        "value": "Electric Motors",
+        "note": "908874",
+        "taxonomyId": "52510005"
+      },
+      {
+        "value": "Electric Vehicle (EV)",
+        "note": "1037570",
+        "taxonomyId": "97016367"
+      },
+      {
+        "value": "Lighting Fixtures",
+        "note": "908881",
+        "taxonomyId": "97002142"
+      },
+      {
+        "value": "Microelectronics",
+        "note": "908884",
+        "taxonomyId": "95938585"
+      },
+      {
+        "value": "Ordnance",
+        "note": "908885",
+        "taxonomyId": "96084272"
+      },
+      {
+        "value": "Pyrotechnics",
+        "note": "925165",
+        "taxonomyId": "97005256"
+      },
+      {
+        "value": "Trucks",
+        "note": "896569",
+        "taxonomyId": "95921599"
+      },
+      {
+        "value": "X-Ray Machines",
+        "note": "908984",
+        "taxonomyId": "97000907"
+      }
+    ]
+  },
+  {
+    "id": "cert",
+    "rank": "Q13",
+    "importance": 32,
+    "title": "Certifications & standards",
+    "tier": "adaptive",
+    "multi": true,
+    "ask": "Do suppliers need to hold any certifications?",
+    "hint": "Attribute 127 supplies two taxonomy values; the remaining 126 quality / regulatory / compliance certifications come from the Thomasnet supplier certification list (heading \u201ccert\u201d), sorted by supplier count. Any Mil-Spec selection, including MIL-SPEC 45208A, drives the Stampings: Military Specification heading match.",
+    "options": [
+      {
+        "value": "Mil-Spec (MS)",
+        "note": "880649",
+        "taxonomyId": "78560265"
+      },
+      {
+        "value": "Government specifications",
+        "note": "908855",
+        "taxonomyId": "78520400"
+      },
+      {
+        "value": "ISO 9001:2015",
+        "note": "918 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Made in the USA",
+        "note": "523 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9001:2008",
+        "note": "455 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS9100D",
+        "note": "275 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Conflict Minerals Disclosure",
+        "note": "199 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9000",
+        "note": "167 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "REACH",
+        "note": "161 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ITAR Registered",
+        "note": "157 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "RoHS Compliant",
+        "note": "146 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 14001:2015",
+        "note": "145 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "IATF 16949:2016",
+        "note": "114 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS9100C",
+        "note": "113 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9001",
+        "note": "99 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "RoHS 2 Compliant (RoHS Recast)",
+        "note": "96 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Nadcap",
+        "note": "83 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9002",
+        "note": "79 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "DFARS",
+        "note": "66 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 14001:2004",
+        "note": "62 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9001:2000",
+        "note": "62 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 13485:2016",
+        "note": "58 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS9120B",
+        "note": "55 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 45001:2018",
+        "note": "51 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "FDA Registered",
+        "note": "50 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Lean Manufacturing",
+        "note": "48 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO/TS 16949:2009",
+        "note": "47 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ASME Boiler and Pressure Vessel (BPVC)",
+        "note": "45 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO/IEC 17025:2017",
+        "note": "45 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 14001",
+        "note": "42 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Pressure Equipment Directive (2014/68/EU)",
+        "note": "42 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Drug-Free Workplace Program",
+        "note": "36 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "OHSAS 18001:2007",
+        "note": "35 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Buy American Act",
+        "note": "32 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "MIL-SPEC 45208A",
+        "note": "32 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Six Sigma",
+        "note": "32 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO/IEC 17025:2005",
+        "note": "31 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS9100",
+        "note": "30 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Good Manufacturing Practices (GMP)",
+        "note": "26 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO/TS 16949",
+        "note": "24 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS9120A",
+        "note": "23 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "QS 9000",
+        "note": "23 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AISC",
+        "note": "19 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "NIST 800-171",
+        "note": "19 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Other",
+        "note": "19 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 13485:2003",
+        "note": "16 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "NBBI Boiler & Pressure Vessel",
+        "note": "16 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "OHSAS 18001",
+        "note": "16 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Berry Amendment Compliance",
+        "note": "14 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "External Specialist Certification",
+        "note": "14 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "GSA Approved",
+        "note": "14 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "C-TPAT",
+        "note": "13 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 13485",
+        "note": "13 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 50001:2011",
+        "note": "12 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "SQF Certified",
+        "note": "12 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "API Spec Q1",
+        "note": "10 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS9120",
+        "note": "10 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "FFL",
+        "note": "10 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO/IEC 17025",
+        "note": "10 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "EPA Facility Compliance",
+        "note": "9 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "OSHA SHARP",
+        "note": "9 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ASME Nuclear Quality Assurance (NQA-1)",
+        "note": "8 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "FAA Certified Repair Station",
+        "note": "8 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 14000",
+        "note": "8 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS9100B",
+        "note": "7 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "CGP Registered",
+        "note": "7 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "CMMC",
+        "note": "7 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9000:2001",
+        "note": "7 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "CSA W47.1",
+        "note": "6 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9001:2002",
+        "note": "6 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9001:2004",
+        "note": "6 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ANSI/ESD S20.20-2007",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Association of American Railroads Quality Assurance (AAR QA)",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "EN ISO 13485:2012",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "European Aviation Safety Agency (EASA) Part 145 Approval",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "FSC Chain-of-Custody",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "IPC/WHMA-A-620",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 50001",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9001:1994",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9001:2001",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO/TS 16949:2002",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "International Railway Industry Standard (IRIS)",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "JCP Certified (DD 2345)",
+        "note": "5 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ASME N-Type",
+        "note": "4 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "IPC-A-610",
+        "note": "4 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 14001:1996",
+        "note": "4 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 17034:2016",
+        "note": "4 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISPM 15",
+        "note": "4 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ANSI/NCSL Z540.1-1994",
+        "note": "3 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS9000",
+        "note": "3 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS9100A",
+        "note": "3 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ASME MO",
+        "note": "3 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "CSA N299.3-16",
+        "note": "3 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "E-Stewards",
+        "note": "3 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "FSC Controlled Wood",
+        "note": "3 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "NQS 9000",
+        "note": "3 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "NSF GMP Registration Program",
+        "note": "3 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Responsible Distribution",
+        "note": "3 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ANSI/ESD S20.20-2014",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS6081:2012",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Build America, Buy America (BABA) Act",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "CMMC Level 2",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Department of Transportation (DOT) Approved Cylinder Requalification Facility",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "FSSC 22000",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "G7 Master Qualification",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "IPC J-STD-001",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 14644-1:2015",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9000:2000",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "QS 9000:1998",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "SFI Chain-of-Custody",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "TL9000",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "USFCR Verified Vendor",
+        "note": "2 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "7 CFR Part 205",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ANSI/MSE 50021:2013",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ANSI/NCSL Z540.1",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ANSI/NCSL Z540.3-2006",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS7101A",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AS9003:2001",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "CMMC Level 1",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "DEAC Accredited",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 22000:2005",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9002:1994",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO 9003",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO/IEC 27000",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO/IEC 27001",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "ISO/IEC 27001:2005",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "MIL-PRF-31032",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "R2",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "No requirement"
+      }
+    ]
+  },
+  {
+    "id": "diverse",
+    "rank": "Q14",
+    "importance": 25,
+    "title": "Diverse supplier requirements",
+    "tier": "adaptive",
+    "multi": true,
+    "ask": "Does this purchase need to count toward supplier-diversity goals?",
+    "hint": "Ownership / diversity classifications from the Thomasnet supplier certification list (heading \u201ccert\u201d), sorted by supplier count. Defaults to no requirement.",
+    "options": [
+      {
+        "value": "Woman Owned",
+        "note": "213 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Small Business Enterprise (SBE)",
+        "note": "126 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Veteran-Owned",
+        "note": "125 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Small Disadvantaged Business (SDB)",
+        "note": "83 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Women's Business Enterprise (WBE)",
+        "note": "68 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Woman Owned Small Business (WOSB)",
+        "note": "62 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Minority Business Enterprise (MBE)",
+        "note": "39 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Hispanic American",
+        "note": "36 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Minority Owned (Not Specified)",
+        "note": "29 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "HubZone",
+        "note": "27 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Asian-Indian",
+        "note": "24 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Asian-Pacific American",
+        "note": "20 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Disadvantaged Business Enterprise (DBE)",
+        "note": "19 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Service Disabled Veteran Owned Small Business",
+        "note": "18 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "SBA 8(a)",
+        "note": "16 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Veteran Owned Small Business",
+        "note": "16 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Black American",
+        "note": "11 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Native American",
+        "note": "7 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "Historically Underutilized Business (HUB)",
+        "note": "4 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "AbilityOne",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "LGBT Business Enterprise (LGBTBE)",
+        "note": "1 suppliers",
+        "taxonomyId": "cert"
+      },
+      {
+        "value": "No requirement"
+      }
+    ]
+  }
+]
