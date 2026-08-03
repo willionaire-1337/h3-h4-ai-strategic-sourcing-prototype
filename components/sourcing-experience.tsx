@@ -341,8 +341,8 @@ export function SourcingExperience() {
 
   /**
    * Reopen a settled question: everything the run logged from that question
-   * onwards is rolled back, so the buyer lands on it with their previous pick
-   * restored and answers it forward again from there.
+   * onwards is rolled back, so the buyer lands on it with a clean slate and
+   * answers it forward again from there.
    */
   const reopenAsk = useCallback((entryId: number) => {
     const index = transcript.findIndex((entry) => entry.id === entryId);
@@ -363,7 +363,9 @@ export function SourcingExperience() {
       }
     }
     setAnswers((current) => current.filter((answer) => !rolledBack.has(answer.questionId)));
-    setPicked(target.answer ?? []);
+    // A reopened question starts blank rather than with the previous pick,
+    // so nothing reads as pre-selected while the buyer reconsiders.
+    setPicked([]);
     setTranscript((entries) =>
       entries
         .slice(0, index + 1)
@@ -467,14 +469,6 @@ export function SourcingExperience() {
                   <strong>{liveMatch.toLocaleString()}</strong>
                   Matched suppliers
                 </span>
-                <button
-                  type="button"
-                  className="agent-optout"
-                  title={OPT_OUT_HINT}
-                  onClick={() => setAgentOpen(false)}
-                >
-                  Opt out <l-icon name="circle-info" />
-                </button>
               </div>
               <div
                 className="agent-progress"

@@ -506,33 +506,15 @@
     "rank": "Q9",
     "importance": 60,
     "title": "Supplier location",
-    "tier": "adaptive",
+    "tier": "core",
     "multi": false,
-    "ask": "Should suppliers be limited by location?",
-    "hint": "Geography is a Supplier Discovery search filter (no heading). Choose how to constrain the supplier pool; distinct from Q7 ship-to, which is the part destination.",
+    "location": true,
+    "ask": "Where should suppliers be located?",
+    "hint": "Asked third: the buyer types a ZIP code, city, or state, or selects National for no geographic preference. Distinct from Q7 ship-to, which is the part destination.",
     "options": [
       {
-        "value": "Anywhere \u2014 no preference",
-        "note": "default"
-      },
-      {
-        "value": "Within radius of a ZIP",
-        "note": "ZIP + radius inputs below",
-        "taxonomyId": "geo"
-      },
-      {
-        "value": "Specific state(s)",
-        "note": "state multi-select below",
-        "taxonomyId": "geo"
-      },
-      {
-        "value": "Domestic (USA) only",
-        "note": "pairs with Made in the USA / Buy American certs",
-        "taxonomyId": "geo"
-      },
-      {
-        "value": "Radius: 50 / 100 / 250 / 500 mi",
-        "taxonomyId": "geo"
+        "value": "National",
+        "note": "no geographic preference"
       }
     ]
   },

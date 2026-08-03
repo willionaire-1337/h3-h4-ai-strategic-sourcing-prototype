@@ -1,5 +1,6 @@
 import { ALL_CANDIDATES, narrowCandidates, planField } from "./ask-viability"
 import { QUESTIONNAIRE, type Question } from "./questionnaire"
+import { planScreening } from "./screening"
 import { CATEGORY_SUPPLIER_COUNT, type Supplier } from "./suppliers"
 
 /**
@@ -164,6 +165,58 @@ export function mergeParsedAnswers(
 const NON_FILTERING_QUESTIONS = new Set<string>(["delivery"])
 
 /**
+ * The location question is answered with a typed place rather than an option
+ * row, so its filtering can't go through the keyword screen — "TX" would hit
+ * "manufacturing". It gets its own matcher instead.
+ */
+export const LOCATION_QUESTION_ID = "loc"
+/** The location question's only option row: no geographic preference. */
+export const LOCATION_NATIONAL = "National"
+
+/** A location answer that doesn't constrain geography at all. */
+function isNationalLocation(answer: LoggedAnswer): boolean {
+  return answer.questionId === LOCATION_QUESTION_ID && answer.values.includes(LOCATION_NATIONAL)
+}
+
+/**
+ * Whether a supplier is in the typed place. A ZIP counts as its three-digit
+ * region rather than the exact code; a state name, code, or metro resolves to
+ * the state and its neighbors (sourcing is regional); anything else matches
+ * against the profile's city and state.
+ */
+function matchesLocation(supplier: Supplier, place: string): boolean {
+  const text = place.trim().toLowerCase()
+  if (!text) return true
+  if (/^\d{3,5}$/.test(text)) return supplier.zip.startsWith(text.slice(0, 3))
+  const plan = planScreening(place, [])
+  if (plan.states.size > 0) {
+    const state = supplier.state.toLowerCase()
+    return plan.states.has(state) || plan.nearby.has(state)
+  }
+  // A bare two-letter entry the screen couldn't place ("in" reads as a word,
+  // not Indiana) is still a state code when it's the whole answer.
+  if (text.length === 2) return supplier.state.toLowerCase() === text
+  return `${supplier.city}, ${supplier.state}`.toLowerCase().includes(text)
+}
+
+/** Whether an answer narrows the pool at all, and the pool after it. */
+function answerFilters(answer: LoggedAnswer): boolean {
+  if (answer.skipped || answer.values.length === 0) return false
+  if (NON_FILTERING_QUESTIONS.has(answer.questionId)) return false
+  if (isNationalLocation(answer)) return false
+  return true
+}
+
+function applyAnswer(candidates: Supplier[], answer: LoggedAnswer): Supplier[] {
+  if (answer.questionId === LOCATION_QUESTION_ID) {
+    return candidates.filter((supplier) =>
+      answer.values.some((place) => matchesLocation(supplier, place)),
+    )
+  }
+  return narrowCandidates(candidates, answer.values)
+}
+
+/**
  * The suppliers still in play given everything logged so far. Answers within
  * one question widen (OR); answers across questions narrow (AND). Skipped
  * questions don't filter.
@@ -171,9 +224,8 @@ const NON_FILTERING_QUESTIONS = new Set<string>(["delivery"])
 export function candidatesFor(answers: LoggedAnswer[]): Supplier[] {
   let candidates = ALL_CANDIDATES
   for (const answer of answers) {
-    if (answer.skipped || answer.values.length === 0) continue
-    if (NON_FILTERING_QUESTIONS.has(answer.questionId)) continue
-    candidates = narrowCandidates(candidates, answer.values)
+    if (!answerFilters(answer)) continue
+    candidates = applyAnswer(candidates, answer)
   }
   return candidates
 }
@@ -231,7 +283,10 @@ function dampedShare(values: string[]): number {
 
 /** The share of the category one answer leaves behind. */
 function answerStep(answer: LoggedAnswer): number {
-  return Math.min(MAX_STEP, Math.max(MIN_STEP, dampedShare(answer.values)))
+  const matched = applyAnswer(ALL_CANDIDATES, answer).length
+  const selectivity = matched / ALL_CANDIDATES.length
+  const share = selectivity <= 0 ? 0 : selectivity ** SELECTIVITY_DAMPING
+  return Math.min(MAX_STEP, Math.max(MIN_STEP, share))
 }
 
 /**
@@ -242,8 +297,7 @@ function answerStep(answer: LoggedAnswer): number {
 export function simulatedMatchCount(answers: LoggedAnswer[]): number {
   let share = 1
   for (const answer of answers) {
-    if (answer.skipped || answer.values.length === 0) continue
-    if (NON_FILTERING_QUESTIONS.has(answer.questionId)) continue
+    if (!answerFilters(answer)) continue
     share *= answerStep(answer)
   }
   return Math.round(CATEGORY_SUPPLIER_COUNT * share)
@@ -275,10 +329,7 @@ export type MatchSet = {
  */
 function lastFilterIndex(answers: LoggedAnswer[]): number {
   for (let index = answers.length - 1; index >= 0; index--) {
-    const answer = answers[index]
-    if (answer.skipped || answer.values.length === 0) continue
-    if (NON_FILTERING_QUESTIONS.has(answer.questionId)) continue
-    return index
+    if (answerFilters(answers[index])) return index
   }
   return -1
 }
@@ -315,7 +366,13 @@ export function matchSetFor(answers: LoggedAnswer[], target = SHORTLIST_TARGET):
     const index = lastFilterIndex(widened)
     // Nothing left to relax — the slice simply holds no one else.
     if (index < 0) break
-    relaxed.push(widened[index].values.join(", "))
+    // Named so the near-match label reads as a sentence: a relaxed location
+    // is "your location (75001)" rather than a bare ZIP.
+    relaxed.push(
+      widened[index].questionId === LOCATION_QUESTION_ID
+        ? `your location (${widened[index].values.join(", ")})`
+        : widened[index].values.join(", "),
+    )
     widened = [...widened.slice(0, index), ...widened.slice(index + 1)]
     for (const supplier of candidatesFor(widened)) {
       if (seen.has(supplier.id)) continue
@@ -343,13 +400,14 @@ export type NextAsk = {
  *
  * "delivery" (Q7) holds its place in the order but is never asked: a need-by
  * date describes the order rather than the supplier, so it can't narrow the
- * set (see {@link NON_FILTERING_QUESTIONS}). Supplier location (Q9) is left
- * out entirely — the results rail filters on it, so asking for it would
- * spend a turn on something the buyer can narrow themselves.
+ * set (see {@link NON_FILTERING_QUESTIONS}). Supplier location is asked
+ * third, per the requirements — the buyer types a ZIP code, city, or state,
+ * or selects National.
  */
 export const ASK_SEQUENCE = [
   "material",
   "tooling",
+  "loc",
   "qty",
   "tol",
   "stock",
@@ -384,6 +442,12 @@ export function nextAsk(answers: LoggedAnswer[]): NextAsk | null {
     if (NON_FILTERING_QUESTIONS.has(questionId)) continue
     const question = questionById(questionId)
     if (!question) continue
+    // The location question takes a typed place, not an option row, so the
+    // option-narrowing checks below don't apply — any real place narrows the
+    // set, and "National" is the explicit opt-out.
+    if (question.location) {
+      return { question, options: question.options.map((option) => option.value) }
+    }
     const plan = planField(
       candidates,
       question.options.map((option) => option.value),

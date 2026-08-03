@@ -159,16 +159,8 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
               of {CATEGORY_SUPPLIER_COUNT.toLocaleString()} verified suppliers match your query.
             </p>
           </div>
-          <label className="location-search">
-            <l-icon name="location-dot" aria-hidden="true" />
-            <input
-              type="search"
-              value={location}
-              aria-label="Filter by location"
-              placeholder="Location by City, State, or ZIP"
-              onChange={(event) => setLocation(event.target.value)}
-            />
-          </label>
+          {/* Location left the header: it's asked as question 3 in the agent
+              flow now, and remains available in the All Filters drawer. */}
           <button type="button" className="all-filters" onClick={() => setFiltersOpen(true)}>
             <l-icon name="sliders" aria-hidden="true" />
             All Filters

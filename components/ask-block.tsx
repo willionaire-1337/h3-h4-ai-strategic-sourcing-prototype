@@ -95,6 +95,8 @@ export function AskBlock({
 }: AskBlockProps) {
   const { question, options } = ask;
   const [expanded, setExpanded] = useState(false);
+  /** Typed place for the location question — ZIP code, city, or state. */
+  const [place, setPlace] = useState("");
 
   const active = status === "active";
   const gridRef = useRef<HTMLDivElement>(null);
@@ -123,9 +125,11 @@ export function AskBlock({
       <h5 className="ask-question mar-0">{question.ask}</h5>
       {active && (
         <p className="ask-help mar-0">
-          {question.multi
-            ? "Pick every option that applies — each answer narrows the list."
-            : "Pick the closest match — each answer narrows the list."}
+          {question.location
+            ? "Enter a ZIP code, city, or state — or select National for no preference."
+            : question.multi
+              ? "Pick every option that applies — each answer narrows the list."
+              : "Pick the closest match — each answer narrows the list."}
         </p>
       )}
 
@@ -142,6 +146,33 @@ export function AskBlock({
             {edit}
           </p>
         ))}
+
+      {active && question.location && (
+        <form
+          className="location-entry"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const text = place.trim();
+            if (!text) return;
+            setPlace("");
+            onSelect(text);
+          }}
+        >
+          <label className="location-search location-entry-field">
+            <l-icon name="location-dot" aria-hidden="true" />
+            <input
+              type="text"
+              value={place}
+              aria-label="ZIP code, city, or state"
+              placeholder="ZIP code, city, or state"
+              onChange={(event) => setPlace(event.target.value)}
+            />
+          </label>
+          <button kind="primary" type="submit" disabled={!place.trim()}>
+            Set location
+          </button>
+        </form>
+      )}
 
       {active &&
         (options.length > 0 ? (
