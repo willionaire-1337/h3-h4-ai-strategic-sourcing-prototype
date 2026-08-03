@@ -7,25 +7,31 @@ import { SiteNavbar } from "@/components/site-navbar";
 import { SupplierResults } from "@/components/supplier-results";
 import { ThinkingIndicator } from "@/components/thinking-indicator";
 import {
-  candidatesFor,
-  CORE_QUESTION_COUNT,
   FREE_TEXT_ENABLED,
   impliedAnswers,
   introSummary,
+  matchSetFor,
   mergeParsedAnswers,
   nextAsk,
   parseInitialQuery,
   questionById,
+  railTarget,
   routesOutToDeepDrawing,
+  SHORTLIST_TARGET,
+  simulatedMatchCount,
   type LoggedAnswer,
   type NextAsk,
 } from "@/lib/simulation";
-import { CATEGORY_LABEL, scaleToCategory } from "@/lib/suppliers";
+import { CATEGORY_LABEL, CATEGORY_SUPPLIER_COUNT } from "@/lib/suppliers";
 
 const WELCOME = "Tell us about your need and we'll refine your results.";
 
-/** Match count at which the run has produced a workable shortlist. */
-const SHORTLIST_MATCHES = 50;
+/**
+ * The stall rule's "reasonable number of questions": a broad category that
+ * hasn't refined below the shortlist target after this many asks completes
+ * gracefully with the best set it has rather than asking on.
+ */
+const MAX_ASKS = 8;
 
 const OPT_OUT_HINT =
   "Opt out of the Thomas Agent experience and go back to Thomas Classic sourcing";
@@ -34,7 +40,18 @@ type TranscriptEntry =
   | { kind: "user"; id: number; text: string }
   | { kind: "assistant"; id: number; text: string; logged?: LoggedAnswer[]; matchCount?: number }
   /** Terminal step: the run is over, either quotable or routed to another family. */
-  | { kind: "done"; id: number; routed?: boolean; text?: string; matched?: number }
+  | {
+      kind: "done";
+      id: number;
+      routed?: boolean;
+      text?: string;
+      /** Suppliers in the category still matching everything logged. */
+      matched?: number;
+      /** How many of them the results rail is showing. */
+      shortlist?: number;
+      /** Stall rule: the run completed while still above the shortlist target. */
+      stalled?: boolean;
+    }
   | {
       kind: "ask";
       id: number;
@@ -107,17 +124,12 @@ export function SourcingExperience() {
 
   const endDrag = useCallback(() => setDragging(false), []);
 
-  /** Queue the next core question, or wrap up when nothing is left worth asking. */
+  /** Queue the next question, or wrap up when nothing is left worth asking. */
   const advance = useCallback(
     (currentAnswers: LoggedAnswer[]) => {
       setThinking(true);
       later(700, () => {
         setThinking(false);
-        const ask = nextAsk(currentAnswers);
-        if (ask) {
-          setTranscript((entries) => [...entries, { kind: "ask", id: nextId(), ask, status: "active" }]);
-          return;
-        }
         if (routesOutToDeepDrawing(currentAnswers)) {
           setTranscript((entries) => [
             ...entries,
@@ -130,11 +142,32 @@ export function SourcingExperience() {
           ]);
           return;
         }
-        const matched = scaleToCategory(candidatesFor(currentAnswers).length);
-        setTranscript((entries) => [
-          ...entries,
-          { kind: "done", id: nextId(), matched },
-        ]);
+        // The stop condition: questions continue only while the match set
+        // still exceeds the shortlist target. At 20 or below — or when no
+        // refining question remains — the run stops and presents the results.
+        const matched = simulatedMatchCount(currentAnswers);
+        const ask = matched > SHORTLIST_TARGET ? nextAsk(currentAnswers) : null;
+        setTranscript((entries) => {
+          // Stall rule: after a reasonable number of questions a category
+          // that won't refine below the target completes gracefully.
+          const asked = entries.filter((entry) => entry.kind === "ask").length;
+          if (ask && asked < MAX_ASKS) {
+            return [...entries, { kind: "ask" as const, id: nextId(), ask, status: "active" as const }];
+          }
+          // Sized to what the rail actually shows, so the completion copy and
+          // the results header never quote two different shortlists.
+          const matchSet = matchSetFor(currentAnswers, railTarget(matched));
+          return [
+            ...entries,
+            {
+              kind: "done" as const,
+              id: nextId(),
+              matched,
+              shortlist: matchSet.matches.length + matchSet.near.length,
+              stalled: matched > SHORTLIST_TARGET,
+            },
+          ];
+        });
       });
     },
     [later],
@@ -172,7 +205,7 @@ export function SourcingExperience() {
             id: nextId(),
             text: introSummary(parsed),
             logged: all,
-            matchCount: scaleToCategory(candidatesFor(all).length),
+            matchCount: simulatedMatchCount(all),
           },
         ]);
         advance(all);
@@ -257,7 +290,7 @@ export function SourcingExperience() {
             id: nextId(),
             text: "Logged — the match list is updated.",
             logged: added,
-            matchCount: scaleToCategory(candidatesFor(merged).length),
+            matchCount: simulatedMatchCount(merged),
           },
         ]);
       });
@@ -308,8 +341,8 @@ export function SourcingExperience() {
 
   /**
    * Reopen a settled question: everything the run logged from that question
-   * onwards is rolled back, so the buyer lands on it with their previous pick
-   * restored and answers it forward again from there.
+   * onwards is rolled back, so the buyer lands on it with a clean slate and
+   * answers it forward again from there.
    */
   const reopenAsk = useCallback((entryId: number) => {
     const index = transcript.findIndex((entry) => entry.id === entryId);
@@ -330,7 +363,9 @@ export function SourcingExperience() {
       }
     }
     setAnswers((current) => current.filter((answer) => !rolledBack.has(answer.questionId)));
-    setPicked(target.answer ?? []);
+    // A reopened question starts blank rather than with the previous pick,
+    // so nothing reads as pre-selected while the buyer reconsiders.
+    setPicked([]);
     setTranscript((entries) =>
       entries
         .slice(0, index + 1)
@@ -369,12 +404,16 @@ export function SourcingExperience() {
   const hasActiveAsk = activeAsk != null;
   const started = transcript.some((entry) => entry.kind === "user");
   /** Suppliers still matching everything logged — the header's live count. */
-  const liveMatch = scaleToCategory(candidatesFor(answers).length);
+  const liveMatch = simulatedMatchCount(answers);
   const canGoBack = transcript.some((entry) => entry.kind === "ask" && entry.status !== "active");
-  /** Questions put to bed, so the header bar tracks how far along the run is. */
-  const settled = Math.min(
-    CORE_QUESTION_COUNT,
-    transcript.filter((entry) => entry.kind === "ask" && entry.status !== "active").length,
+  // There is no fixed question count to show progress against, so the header
+  // bar tracks the narrowing itself: how far the count has come down from the
+  // whole category toward the shortlist target, on a log scale so the early
+  // answers (which cut the most suppliers) don't swallow the whole bar.
+  const narrowing = Math.min(
+    1,
+    Math.log(CATEGORY_SUPPLIER_COUNT / Math.max(liveMatch, SHORTLIST_TARGET)) /
+      Math.log(CATEGORY_SUPPLIER_COUNT / SHORTLIST_TARGET),
   );
   // Numbered by the order they were actually asked, so the run reads 1, 2, 3
   // even when the flow drops questions the supplier data can't narrow.
@@ -425,29 +464,21 @@ export function SourcingExperience() {
                 <p className="agent-welcome mar-0">{WELCOME}</p>
               </div>
               <div className="agent-aside">
-                {/* Goes green once the list is short enough to work through. */}
-                <span className="agent-count" data-near={liveMatch < SHORTLIST_MATCHES || undefined}>
+                {/* Goes green once the count is down to a presentable shortlist. */}
+                <span className="agent-count" data-near={liveMatch <= SHORTLIST_TARGET || undefined}>
                   <strong>{liveMatch.toLocaleString()}</strong>
                   Matched suppliers
                 </span>
-                <button
-                  type="button"
-                  className="agent-optout"
-                  title={OPT_OUT_HINT}
-                  onClick={() => setAgentOpen(false)}
-                >
-                  Opt out <l-icon name="circle-info" />
-                </button>
               </div>
               <div
                 className="agent-progress"
                 role="progressbar"
-                aria-label="Questions answered"
+                aria-label="Narrowing toward your shortlist"
                 aria-valuemin={0}
-                aria-valuemax={CORE_QUESTION_COUNT}
-                aria-valuenow={settled}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(narrowing * 100)}
               >
-                <span style={{ width: `${(settled / CORE_QUESTION_COUNT) * 100}%` }} />
+                <span style={{ width: `${narrowing * 100}%` }} />
               </div>
             </div>
             <div className="agent-body" ref={scrollRef} data-floating-actions={activeAsk ? true : undefined}>
@@ -499,22 +530,20 @@ export function SourcingExperience() {
                           </span>
                         </span>
                         <h3 className="done-title mar-0">
-                          {entry.routed ? (
-                            "This need is quoted by Deep Drawing Services"
-                          ) : (
-                            <>
-                              We found{" "}
-                              <span className="done-count">
-                                {(entry.matched ?? 0).toLocaleString()} suppliers
-                              </span>{" "}
-                              that match your requirements
-                            </>
-                          )}
+                          {entry.routed
+                            ? "This need is quoted by Deep Drawing Services"
+                            : entry.stalled
+                              ? "This is the best set we can give you"
+                              : `Based on your inputs we've matched you to ${entry.shortlist ?? 0} suppliers.`}
                         </h3>
                         <p className="mar-0 done-copy">
                           {entry.routed
                             ? entry.text
-                            : `You can restart your search any time or close the agent below.${
+                            : `${
+                                entry.stalled
+                                  ? `Nothing left to ask would materially narrow this category below ${(entry.matched ?? 0).toLocaleString()} suppliers. `
+                                  : ""
+                              }You can restart your search any time or close the agent below.${
                                 FREE_TEXT_ENABLED
                                   ? " You can also keep typing details like certifications, industry, or supplier location."
                                   : ""
@@ -539,7 +568,6 @@ export function SourcingExperience() {
                     status={entry.status}
                     answer={entry.answer}
                     position={askPositions.get(entry.id) ?? 1}
-                    total={CORE_QUESTION_COUNT}
                     picked={picked}
                     onSelect={selectOption}
                     onEdit={entry.status === "active" ? undefined : () => reopenAsk(entry.id)}

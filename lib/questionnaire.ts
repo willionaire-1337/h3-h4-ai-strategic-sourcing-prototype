@@ -14,6 +14,12 @@ export type Question = {
   title: string
   tier: "core" | "adaptive"
   multi: boolean
+  /**
+   * Answered with a typed place — ZIP code, city, or state — rather than by
+   * picking from the option rows; the options carry only the no-preference
+   * opt-out ("National").
+   */
+  location?: boolean
   ask: string
   hint: string
   options: QuestionOption[]

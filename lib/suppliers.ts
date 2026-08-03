@@ -33,10 +33,10 @@ export const CATEGORY_SUPPLIER_COUNT = 2482
 export const CATEGORY_LABEL = "Stamping Services"
 
 /**
- * A count over the local sample, restated against the whole category — each
- * profile here stands for its share of the 2,482. Counts shown to the buyer go
- * through this, so the ask blocks and the supplier panel speak in the same
- * numbers.
+ * A count over the local sample, restated against the whole category. Left for
+ * reference: counts shown to the buyer now come from the answer-driven funnel
+ * in `simulation.ts`, since a flat scale-up of a collapsed sample reads as a
+ * category of zero long before the questions run out.
  */
 export function scaleToCategory(count: number): number {
   return Math.round((count * CATEGORY_SUPPLIER_COUNT) / SUPPLIERS.length)

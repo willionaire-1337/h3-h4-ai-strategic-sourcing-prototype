@@ -1,16 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { FilterDrawer, type FilterGroup } from "@/components/filter-drawer";
 import { SupplierCard } from "@/components/supplier-card";
-import { questionById, candidatesFor, type LoggedAnswer } from "@/lib/simulation";
-import { planScreening, scoreRecord } from "@/lib/screening";
 import {
-  CATEGORY_LABEL,
-  CATEGORY_SUPPLIER_COUNT,
-  scaleToCategory,
-  type Supplier,
-} from "@/lib/suppliers";
+  questionById,
+  candidatesFor,
+  MATCH_FLOOR,
+  matchSetFor,
+  railTarget,
+  simulatedMatchCount,
+  type LoggedAnswer,
+} from "@/lib/simulation";
+import { planScreening, scoreRecord } from "@/lib/screening";
+import { CATEGORY_LABEL, CATEGORY_SUPPLIER_COUNT, type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
 /** Suppliers one quote request can go out to. */
@@ -42,8 +45,13 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
 
   const logged = answers.filter((answer) => !answer.skipped && answer.values.length > 0);
 
-  const results = useMemo(() => {
-    const candidates = candidatesFor(answers);
+  /** Suppliers in the category still matching — the number the buyer is shown. */
+  const matchTotal = simulatedMatchCount(answers);
+
+  // Exact matches rank above any near matches the rail was padded with, so a
+  // relaxed answer never pushes a supplier that meets everything down the list.
+  const { exact, near, backfilled, relaxed } = useMemo(() => {
+    const set = matchSetFor(answers, railTarget(matchTotal));
     const plan = planScreening(
       `${query} ${logged.map((answer) => answer.values.join(" ")).join(" ")}`,
       [],
@@ -58,17 +66,26 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
       (!verifiedOnly || supplier.verified === true) &&
       (types.length === 0 || types.some((type) => supplier.companyTypes.includes(type))) &&
       (certs.length === 0 || certs.some((cert) => supplier.certifications.includes(cert)));
-    return candidates
-      .filter((supplier) => inPlace(supplier) && passesFacets(supplier))
-      .sort((a, b) => {
-        const scoreDelta = scoreRecord(b, plan) - scoreRecord(a, plan);
-        if (scoreDelta !== 0) return scoreDelta;
-        if (a.verified !== b.verified) return a.verified ? -1 : 1;
-        if (a.sponsored !== b.sponsored) return a.sponsored ? -1 : 1;
-        return 0;
-      });
+    const rank = (group: Supplier[]) =>
+      group
+        .filter((supplier) => inPlace(supplier) && passesFacets(supplier))
+        .sort((a, b) => {
+          const scoreDelta = scoreRecord(b, plan) - scoreRecord(a, plan);
+          if (scoreDelta !== 0) return scoreDelta;
+          if (a.verified !== b.verified) return a.verified ? -1 : 1;
+          if (a.sponsored !== b.sponsored) return a.sponsored ? -1 : 1;
+          return 0;
+        });
+    return {
+      exact: rank(set.matches),
+      near: rank(set.near),
+      backfilled: set.backfilled,
+      relaxed: set.relaxed,
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answers, query, location, verifiedOnly, facetPicks]);
+  }, [answers, matchTotal, query, location, verifiedOnly, facetPicks]);
+
+  const results = useMemo(() => [...exact, ...near], [exact, near]);
 
   // Facet options come from the suppliers this category can return, so the rail
   // never offers a filter that would empty the list on its own.
@@ -115,7 +132,6 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
     value: answer.values.join(", "),
   }));
 
-  const matchTotal = scaleToCategory(results.length);
   const atSelectionLimit = selected.size >= SELECTION_LIMIT;
 
   const toggleIn = (set: Set<string>, id: string): Set<string> => {
@@ -128,25 +144,23 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
   return (
     <>
       <div className="results-header">
-        <div className="flex align-items-center gap-2">
-          <l-icon name="magnifying-glass" class="txt-blue-100 results-title-icon" aria-hidden="true" />
-          <h3 className="mar-0">{CATEGORY_LABEL} Suppliers</h3>
-        </div>
         <div className="results-meta">
-          <p className="mar-0 txt-smaller txt-darkblue-75">
-            <span className="txt-blue-100 font-semi">{matchTotal.toLocaleString()}</span> suppliers
-            of {CATEGORY_SUPPLIER_COUNT.toLocaleString()} verified suppliers match your query.
-          </p>
-          <label className="location-search">
-            <l-icon name="location-dot" aria-hidden="true" />
-            <input
-              type="search"
-              value={location}
-              aria-label="Filter by location"
-              placeholder="Location by City, State, or ZIP"
-              onChange={(event) => setLocation(event.target.value)}
-            />
-          </label>
+          <div className="results-headline">
+            <div className="flex align-items-center gap-2">
+              <l-icon
+                name="magnifying-glass"
+                class="txt-blue-100 results-title-icon"
+                aria-hidden="true"
+              />
+              <h3 className="mar-0">{CATEGORY_LABEL} Suppliers</h3>
+            </div>
+            <p className="mar-0 txt-smaller txt-darkblue-75">
+              <span className="txt-blue-100 font-semi">{matchTotal.toLocaleString()}</span> suppliers
+              of {CATEGORY_SUPPLIER_COUNT.toLocaleString()} verified suppliers match your query.
+            </p>
+          </div>
+          {/* Location left the header: it's asked as question 3 in the agent
+              flow now, and remains available in the All Filters drawer. */}
           <button type="button" className="all-filters" onClick={() => setFiltersOpen(true)}>
             <l-icon name="sliders" aria-hidden="true" />
             All Filters
@@ -173,16 +187,33 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
 
       <div className="pane-scroll">
         <div className="results-list">
-          {results.slice(0, visibleCount).map((supplier) => (
-            <SupplierCard
-              key={supplier.id}
-              supplier={supplier}
-              saved={saved.has(supplier.id)}
-              selected={selected.has(supplier.id)}
-              selectDisabled={atSelectionLimit && !selected.has(supplier.id)}
-              onToggleSave={() => setSaved((set) => toggleIn(set, supplier.id))}
-              onToggleSelect={() => setSelected((set) => toggleIn(set, supplier.id))}
-            />
+          {results.slice(0, visibleCount).map((supplier, index) => (
+            <Fragment key={supplier.id}>
+              {/* The floor rule's divider. Backfill also pads the rail when the
+                  104-profile slice runs dry while the modeled category count is
+                  still healthy; that padding stands in for real matches the
+                  slice doesn't hold, so only a genuine floor-rule backfill —
+                  the set itself under the floor — is called out, labeled with
+                  the answer that was relaxed to refill it. */}
+              {backfilled && matchTotal < MATCH_FLOOR && index === exact.length && (
+                <div className="results-row-full near-match-note">
+                  <l-icon name="circle-info" aria-hidden="true" />
+                  <p className="mar-0">
+                    {relaxed.length > 0
+                      ? `Closest matches — these meet everything you've asked for except ${relaxed[0]}.`
+                      : "Closest matches — these meet most of your requirements, but not all."}
+                  </p>
+                </div>
+              )}
+              <SupplierCard
+                supplier={supplier}
+                saved={saved.has(supplier.id)}
+                selected={selected.has(supplier.id)}
+                selectDisabled={atSelectionLimit && !selected.has(supplier.id)}
+                onToggleSave={() => setSaved((set) => toggleIn(set, supplier.id))}
+                onToggleSelect={() => setSelected((set) => toggleIn(set, supplier.id))}
+              />
+            </Fragment>
           ))}
           {results.length === 0 && (
             <l-panel class="results-row-full">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
+import { locationSuggestions } from "@/lib/locations";
 import type { NextAsk } from "@/lib/simulation";
 
 /** Most rows of options to offer, however tall the window gets. */
@@ -13,10 +14,12 @@ type AskBlockProps = {
   status: "active" | "answered" | "skipped";
   /** What the buyer picked, shown in place of the option rows once settled. */
   answer?: string[];
-  /** 1-based place in the run of questions, shown in the step line. */
+  /**
+   * 1-based place in the run of questions, shown in the step line. There is
+   * no denominator: the run has no fixed question count — it continues only
+   * while the match set exceeds the shortlist target.
+   */
   position: number;
-  /** Core questions in the run, the denominator of the step line. */
-  total: number;
   /** Selection for the active ask, restored when a question is reopened. */
   picked: string[];
   onSelect: (value: string) => void;
@@ -87,13 +90,30 @@ export function AskBlock({
   status,
   answer,
   position,
-  total,
   picked,
   onSelect,
   onEdit,
 }: AskBlockProps) {
   const { question, options } = ask;
   const [expanded, setExpanded] = useState(false);
+  /** Typed place for the location question — ZIP code, city, or state. */
+  const [place, setPlace] = useState("");
+  /** Whether the autocomplete above the input is showing. */
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  /** Row the arrow keys have landed on. */
+  const [highlighted, setHighlighted] = useState(0);
+
+  const suggestions = question.location && status === "active" ? locationSuggestions(place) : [];
+  const suggesting = suggestOpen && suggestions.length > 0;
+
+  /** Settles the location question with a typed or suggested place. */
+  const submitPlace = (value: string) => {
+    const text = value.trim();
+    if (!text) return;
+    setPlace("");
+    setSuggestOpen(false);
+    onSelect(text);
+  };
 
   const active = status === "active";
   const gridRef = useRef<HTMLDivElement>(null);
@@ -117,14 +137,16 @@ export function AskBlock({
   return (
     <div className="ask-block" aria-disabled={active ? undefined : true}>
       <div className="kicker ask-kicker">
-        Question {position} of {total} · {question.title}
+        Question {position} · {question.title}
       </div>
       <h5 className="ask-question mar-0">{question.ask}</h5>
       {active && (
         <p className="ask-help mar-0">
-          {question.multi
-            ? "Pick every option that applies — each answer narrows the list."
-            : "Pick the closest match — each answer narrows the list."}
+          {question.location
+            ? "Enter a ZIP code, city, or state — or select National for no preference."
+            : question.multi
+              ? "Pick every option that applies — each answer narrows the list."
+              : "Pick the closest match — each answer narrows the list."}
         </p>
       )}
 
@@ -141,6 +163,84 @@ export function AskBlock({
             {edit}
           </p>
         ))}
+
+      {active && question.location && (
+        <form
+          className="location-entry"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitPlace(place);
+          }}
+        >
+          <div className="location-entry-field">
+            {/* The dropdown sits above the input — the question card lives at
+                the foot of the transcript, so upward is where the room is. */}
+            {suggesting && (
+              <ul className="location-suggest" role="listbox" aria-label="Location suggestions">
+                {suggestions.map((suggestion, index) => (
+                  <li key={suggestion.label}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={index === highlighted}
+                      className="location-suggest-row"
+                      data-active={index === highlighted || undefined}
+                      // Mousedown, so the pick lands before the input's blur
+                      // closes the list out from under the click.
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        submitPlace(suggestion.value);
+                      }}
+                      onMouseEnter={() => setHighlighted(index)}
+                    >
+                      <l-icon name="location-dot" aria-hidden="true" />
+                      {suggestion.label}
+                      <span className="location-suggest-kind">{suggestion.kind}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <label className="location-search">
+              <l-icon name="location-dot" aria-hidden="true" />
+              <input
+                type="text"
+                value={place}
+                aria-label="ZIP code, city, or state"
+                placeholder="ZIP code, city, or state"
+                role="combobox"
+                aria-expanded={suggesting}
+                aria-autocomplete="list"
+                onChange={(event) => {
+                  setPlace(event.target.value);
+                  setSuggestOpen(true);
+                  setHighlighted(0);
+                }}
+                onFocus={() => setSuggestOpen(true)}
+                onBlur={() => setSuggestOpen(false)}
+                onKeyDown={(event) => {
+                  if (!suggesting) return;
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    setHighlighted((index) => (index + 1) % suggestions.length);
+                  } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setHighlighted((index) => (index - 1 + suggestions.length) % suggestions.length);
+                  } else if (event.key === "Enter") {
+                    event.preventDefault();
+                    submitPlace(suggestions[highlighted]?.value ?? place);
+                  } else if (event.key === "Escape") {
+                    setSuggestOpen(false);
+                  }
+                }}
+              />
+            </label>
+          </div>
+          <button kind="primary" type="submit" disabled={!place.trim()}>
+            Set location
+          </button>
+        </form>
+      )}
 
       {active &&
         (options.length > 0 ? (
