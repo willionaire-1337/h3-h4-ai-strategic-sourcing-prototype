@@ -534,7 +534,7 @@ export function SourcingExperience() {
                             ? "This need is quoted by Deep Drawing Services"
                             : entry.stalled
                               ? "This is the best set we can give you"
-                              : "Based on what you've told us, these are the suppliers best matched to your need"}
+                              : `Based on your inputs we've matched you to ${entry.shortlist ?? 0} suppliers.`}
                         </h3>
                         <p className="mar-0 done-copy">
                           {entry.routed
@@ -542,10 +542,6 @@ export function SourcingExperience() {
                             : `${
                                 entry.stalled
                                   ? `Nothing left to ask would materially narrow this category below ${(entry.matched ?? 0).toLocaleString()} suppliers. `
-                                  : ""
-                              }${
-                                entry.shortlist
-                                  ? `The ${entry.shortlist} best matches are ranked in your results. `
                                   : ""
                               }You can restart your search any time or close the agent below.${
                                 FREE_TEXT_ENABLED
