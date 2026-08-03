@@ -6,6 +6,7 @@ import { SupplierCard } from "@/components/supplier-card";
 import {
   questionById,
   candidatesFor,
+  MATCH_FLOOR,
   matchSetFor,
   railTarget,
   simulatedMatchCount,
@@ -49,7 +50,7 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
 
   // Exact matches rank above any near matches the rail was padded with, so a
   // relaxed answer never pushes a supplier that meets everything down the list.
-  const { exact, near, backfilled } = useMemo(() => {
+  const { exact, near, backfilled, relaxed } = useMemo(() => {
     const set = matchSetFor(answers, railTarget(matchTotal));
     const plan = planScreening(
       `${query} ${logged.map((answer) => answer.values.join(" ")).join(" ")}`,
@@ -75,7 +76,12 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
           if (a.sponsored !== b.sponsored) return a.sponsored ? -1 : 1;
           return 0;
         });
-    return { exact: rank(set.matches), near: rank(set.near), backfilled: set.backfilled };
+    return {
+      exact: rank(set.matches),
+      near: rank(set.near),
+      backfilled: set.backfilled,
+      relaxed: set.relaxed,
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers, matchTotal, query, location, verifiedOnly, facetPicks]);
 
@@ -191,11 +197,19 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
         <div className="results-list">
           {results.slice(0, visibleCount).map((supplier, index) => (
             <Fragment key={supplier.id}>
-              {backfilled && index === exact.length && (
+              {/* The floor rule's divider. Backfill also pads the rail when the
+                  104-profile slice runs dry while the modeled category count is
+                  still healthy; that padding stands in for real matches the
+                  slice doesn't hold, so only a genuine floor-rule backfill —
+                  the set itself under the floor — is called out, labeled with
+                  the answer that was relaxed to refill it. */}
+              {backfilled && matchTotal < MATCH_FLOOR && index === exact.length && (
                 <div className="results-row-full near-match-note">
                   <l-icon name="circle-info" aria-hidden="true" />
                   <p className="mar-0">
-                    Closest matches — these meet most of your requirements, but not all.
+                    {relaxed.length > 0
+                      ? `Closest matches — these meet everything you've asked for except ${relaxed[0]}.`
+                      : "Closest matches — these meet most of your requirements, but not all."}
                   </p>
                 </div>
               )}

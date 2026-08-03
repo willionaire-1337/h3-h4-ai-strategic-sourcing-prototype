@@ -13,10 +13,12 @@ type AskBlockProps = {
   status: "active" | "answered" | "skipped";
   /** What the buyer picked, shown in place of the option rows once settled. */
   answer?: string[];
-  /** 1-based place in the run of questions, shown in the step line. */
+  /**
+   * 1-based place in the run of questions, shown in the step line. There is
+   * no denominator: the run has no fixed question count — it continues only
+   * while the match set exceeds the shortlist target.
+   */
   position: number;
-  /** Core questions in the run, the denominator of the step line. */
-  total: number;
   /** Selection for the active ask, restored when a question is reopened. */
   picked: string[];
   onSelect: (value: string) => void;
@@ -87,7 +89,6 @@ export function AskBlock({
   status,
   answer,
   position,
-  total,
   picked,
   onSelect,
   onEdit,
@@ -117,7 +118,7 @@ export function AskBlock({
   return (
     <div className="ask-block" aria-disabled={active ? undefined : true}>
       <div className="kicker ask-kicker">
-        Question {position} of {total} · {question.title}
+        Question {position} · {question.title}
       </div>
       <h5 className="ask-question mar-0">{question.ask}</h5>
       {active && (

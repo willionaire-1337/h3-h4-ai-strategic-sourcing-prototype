@@ -179,12 +179,17 @@ export function candidatesFor(answers: LoggedAnswer[]): Supplier[] {
 }
 
 /**
- * A category this short can't be shopped from, so the run stops narrowing and
- * ends on the shortlist rather than asking a question that thins it further.
+ * The largest shortlist ever presented — the spec's "20 or fewer suppliers".
+ * The run keeps asking only while the modeled count still exceeds this, and
+ * the results rail never shows more than this many profiles.
+ */
+export const SHORTLIST_TARGET = 20
+/**
+ * The floor rule's threshold. When an answer drops the set under this, the
+ * exact matches are shown first and the rail is backfilled to a full
+ * shortlist by relaxing the most recent answers, clearly labeled.
  */
 export const MATCH_FLOOR = 10
-/** How many suppliers the results rail is padded out to. */
-export const BACKFILL_TARGET = 25
 
 /**
  * The local database is a 104-profile slice of a 2,482-supplier category, so
@@ -195,21 +200,38 @@ export const BACKFILL_TARGET = 25
  *
  * The share is damped because capabilities correlate in a way a slice this
  * small can't show. Most stamping shops that run aluminum also run steel, so
- * multiplying raw selectivity across a dozen answers would annihilate a pool
- * that in reality narrows gently. The exponent is calibrated so a full run
- * lands near {@link MATCH_FLOOR} rather than at zero.
+ * multiplying raw selectivity across a run of answers would annihilate a pool
+ * that in reality narrows gently. The exponent is calibrated so answers
+ * narrow the count steadily toward {@link SHORTLIST_TARGET} rather than
+ * collapsing it to zero.
  */
 const SELECTIVITY_DAMPING = 0.48
-/** Bounds on one answer's effect, so no single pick ends or stalls the funnel. */
-const MIN_STEP = 0.55
+/**
+ * Bounds on one answer's effect, so no single pick ends or stalls the funnel.
+ * The floor is set so a run of specific answers can actually reach
+ * {@link SHORTLIST_TARGET} within a handful of questions — the spec's example
+ * cuts 60–75% per answer — while never letting one answer end the run alone.
+ */
+const MIN_STEP = 0.35
 const MAX_STEP = 0.97
+
+/**
+ * The least an answer must cut the modeled count for it to have "materially
+ * narrowed" the set — the bar a question has to clear to earn its place.
+ */
+const MATERIAL_CUT = 0.1
+
+/** The damped share of the category an answer leaves behind, unclamped. */
+function dampedShare(values: string[]): number {
+  const matched = narrowCandidates(ALL_CANDIDATES, values).length
+  const selectivity = matched / ALL_CANDIDATES.length
+  if (selectivity <= 0) return 0
+  return selectivity ** SELECTIVITY_DAMPING
+}
 
 /** The share of the category one answer leaves behind. */
 function answerStep(answer: LoggedAnswer): number {
-  const matched = narrowCandidates(ALL_CANDIDATES, answer.values).length
-  const selectivity = matched / ALL_CANDIDATES.length
-  if (selectivity <= 0) return MIN_STEP
-  return Math.min(MAX_STEP, Math.max(MIN_STEP, selectivity ** SELECTIVITY_DAMPING))
+  return Math.min(MAX_STEP, Math.max(MIN_STEP, dampedShare(answer.values)))
 }
 
 /**
@@ -231,61 +253,70 @@ export type MatchSet = {
   /** Suppliers in the slice meeting every answer logged. */
   matches: Supplier[]
   /**
-   * Near matches padding the rail out to {@link BACKFILL_TARGET}, found by
-   * relaxing the most recent answers. Empty while the slice can fill a page on
-   * its own.
+   * Near matches padding the rail out to {@link SHORTLIST_TARGET}, found by
+   * relaxing the most recent answers. Empty while the slice can fill the
+   * shortlist on its own.
    */
   near: Supplier[]
-  /** True once near matches were needed to fill the page. */
+  /** True once near matches were needed to fill the shortlist. */
   backfilled: boolean
+  /**
+   * The answers relaxed to fill the shortlist, most recent first, as the
+   * values the buyer picked — so the near matches can be labeled with what
+   * they aren't guaranteed to meet.
+   */
+  relaxed: string[]
 }
 
 /**
- * Everything logged except the most recent answer that actually filters —
- * skipped questions and ones the profiles can't judge never narrowed anything,
- * so dropping them would widen nothing.
+ * The most recent answer that actually filters — skipped questions and ones
+ * the profiles can't judge never narrowed anything, so relaxing them would
+ * widen nothing.
  */
-function withoutLastFilter(answers: LoggedAnswer[]): LoggedAnswer[] {
+function lastFilterIndex(answers: LoggedAnswer[]): number {
   for (let index = answers.length - 1; index >= 0; index--) {
     const answer = answers[index]
     if (answer.skipped || answer.values.length === 0) continue
     if (NON_FILTERING_QUESTIONS.has(answer.questionId)) continue
-    return [...answers.slice(0, index), ...answers.slice(index + 1)]
+    return index
   }
-  return answers
+  return -1
 }
 
 /**
- * How many profiles the rail shows for a given category count: a full page
- * while the category is larger than one, the category itself once it is
- * smaller, and a padded page once it drops under the floor — the run ends
- * there, and it ends on a shortlist worth working through rather than on the
- * handful that survived the last answer.
+ * How many profiles the rail shows for a given category count: a full
+ * shortlist while the category is larger than one, the category itself once
+ * it is smaller, and a padded shortlist once it drops under the floor — the
+ * floor rule ends the run on a full set worth working through rather than on
+ * the handful that survived the last answer.
  */
 export function railTarget(count: number): number {
-  if (count < MATCH_FLOOR) return BACKFILL_TARGET
-  return Math.min(count, BACKFILL_TARGET)
+  if (count < MATCH_FLOOR) return SHORTLIST_TARGET
+  return Math.min(count, SHORTLIST_TARGET)
 }
 
 /**
- * A page of suppliers to put in front of the buyer. The slice is far smaller
- * than the category it stands for, so once it can't fill the page on its own
+ * The shortlist to put in front of the buyer. The slice is far smaller than
+ * the category it stands for, so once it can't fill the shortlist on its own
  * the most recent answers are relaxed one at a time until it can — an empty
- * rail under a header claiming hundreds would read as broken.
+ * rail under a header claiming hundreds would read as broken. Exact matches
+ * always rank ahead of anything backfilled.
  */
-export function matchSetFor(answers: LoggedAnswer[], target = BACKFILL_TARGET): MatchSet {
+export function matchSetFor(answers: LoggedAnswer[], target = SHORTLIST_TARGET): MatchSet {
   const matches = candidatesFor(answers)
   if (matches.length >= target) {
-    return { matches, near: [], backfilled: false }
+    return { matches, near: [], backfilled: false, relaxed: [] }
   }
   const seen = new Set(matches.map((supplier) => supplier.id))
   const near: Supplier[] = []
+  const relaxed: string[] = []
   let widened = answers
   while (matches.length + near.length < target) {
-    const relaxed = withoutLastFilter(widened)
+    const index = lastFilterIndex(widened)
     // Nothing left to relax — the slice simply holds no one else.
-    if (relaxed.length === widened.length) break
-    widened = relaxed
+    if (index < 0) break
+    relaxed.push(widened[index].values.join(", "))
+    widened = [...widened.slice(0, index), ...widened.slice(index + 1)]
     for (const supplier of candidatesFor(widened)) {
       if (seen.has(supplier.id)) continue
       seen.add(supplier.id)
@@ -293,7 +324,7 @@ export function matchSetFor(answers: LoggedAnswer[], target = BACKFILL_TARGET): 
       if (matches.length + near.length >= target) break
     }
   }
-  return { matches, near, backfilled: near.length > 0 }
+  return { matches, near, backfilled: near.length > 0, relaxed }
 }
 
 export type NextAsk = {
@@ -303,14 +334,18 @@ export type NextAsk = {
 }
 
 /**
- * The order the run asks in, set by the sourcing team's ask sequence rather
- * than by raw importance score. Questions outside it are never put to the
- * buyer — they're only logged when the buyer's own words cover them.
+ * The order the run works through, set by the sourcing team's ask sequence
+ * rather than by raw importance score. There is no fixed question count: an
+ * entry is only ever asked while it can still earn its place, so how many
+ * questions a run takes depends on the answers. Questions outside the
+ * sequence are never put to the buyer — they're only logged when the buyer's
+ * own words cover them.
  *
- * "delivery" (Q7) holds its place in the order but has no questionnaire entry
- * yet, so it is skipped until one lands. Supplier location (Q9) is left out
- * entirely — the results rail filters on it, so asking for it would spend a
- * turn on something the buyer can narrow themselves.
+ * "delivery" (Q7) holds its place in the order but is never asked: a need-by
+ * date describes the order rather than the supplier, so it can't narrow the
+ * set (see {@link NON_FILTERING_QUESTIONS}). Supplier location (Q9) is left
+ * out entirely — the results rail filters on it, so asking for it would
+ * spend a turn on something the buyer can narrow themselves.
  */
 export const ASK_SEQUENCE = [
   "material",
@@ -329,16 +364,10 @@ export const ASK_SEQUENCE = [
 ]
 
 /**
- * Denominator for the header's progress counter — only sequence entries the
- * questionnaire can actually ask, so the run never counts towards a question
- * the buyer will never see.
- */
-export const ASK_COUNT = ASK_SEQUENCE.filter((questionId) => questionById(questionId)).length
-
-/**
  * The next question worth asking: the first unanswered question in the ask
- * sequence whose options still lead somewhere. A need that routed out to Deep
- * Drawing asks nothing further.
+ * sequence that earns its place — some answer to it would still materially
+ * narrow the set. A need that routed out to Deep Drawing asks nothing
+ * further.
  */
 export function nextAsk(answers: LoggedAnswer[]): NextAsk | null {
   if (routesOutToDeepDrawing(answers)) return null
@@ -350,6 +379,9 @@ export function nextAsk(answers: LoggedAnswer[]): NextAsk | null {
   const candidates = ALL_CANDIDATES
   for (const questionId of ASK_SEQUENCE) {
     if (answered.has(questionId)) continue
+    // A question whose answers never filter can't narrow the set, so it never
+    // earns a turn — its details reach the RFQ when the buyer volunteers them.
+    if (NON_FILTERING_QUESTIONS.has(questionId)) continue
     const question = questionById(questionId)
     if (!question) continue
     const plan = planField(
@@ -357,6 +389,12 @@ export function nextAsk(answers: LoggedAnswer[]): NextAsk | null {
       question.options.map((option) => option.value),
     )
     if (plan.skip) continue
+    // Every question earns its place: skip any whose every remaining option
+    // would leave the modeled count effectively where it is.
+    const narrows = plan.options.some(
+      (option) => dampedShare([option]) <= 1 - MATERIAL_CUT,
+    )
+    if (!narrows) continue
     return { question, options: plan.options }
   }
   return null
