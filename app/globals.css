@@ -263,7 +263,139 @@ p,
   cursor: col-resize;
 }
 
-@media (max-width: 980px) {
+/* Tablet: keep the two panes side by side on a thin agent rail instead of
+   stacking. The rail width is fixed (drag is disabled by the override), and
+   the rail's type, cards, and controls tighten up to fit. */
+@media (max-width: 1024px) and (min-width: 641px) {
+  .app-main:not([data-agent-closed]) {
+    grid-template-columns: 340px auto 1fr !important;
+  }
+
+  /* The rail width is fixed here, so the divider is just a hairline. */
+  .app-divider {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .agent-header {
+    gap: var(--l-space-2);
+    padding: var(--l-space-3) var(--l-space-4);
+  }
+
+  .agent-header h4 {
+    font-size: 17px;
+  }
+
+  .agent-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .agent-body {
+    padding: var(--l-space-2) var(--l-space-3) var(--l-space-5);
+  }
+
+  .ask-block {
+    padding: var(--l-space-4);
+  }
+
+  /* One option per row — two columns don't fit a 340px rail. */
+  .option-rows {
+    --option-min-width: 220px;
+  }
+
+  .agent-footer {
+    padding: 12px var(--l-space-3);
+  }
+
+  .answer-actions {
+    gap: var(--l-space-1);
+  }
+
+  .answer-actions-start,
+  .answer-actions-nav,
+  .answer-actions-end {
+    gap: var(--l-space-1);
+  }
+
+  .answer-actions .ghost-button {
+    height: 36px;
+    padding: 0 var(--l-space-3);
+  }
+
+  .answer-actions .answer-tool {
+    width: 36px;
+    padding: 0;
+  }
+
+  /* Results pane is narrower too: keep the tile layout to one column. */
+  .results-list[data-layout="grid"] {
+    grid-template-columns: 1fr;
+  }
+
+  .results-header {
+    padding: var(--l-space-4) var(--l-space-4) var(--l-space-3);
+  }
+}
+
+/* Stacked supplier card for tablet and phone, per the reference mobile card:
+   logo on top with icon-only save/select at the right, the name and profile
+   link on their own rows, then a full-width Visit Website CTA. */
+@media (max-width: 1024px) {
+  .supplier-card .card-head {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    grid-template-areas:
+      "logo save select"
+      "identity identity identity"
+      "cta cta cta";
+    row-gap: var(--l-space-3);
+    column-gap: var(--l-space-1);
+    align-items: center;
+  }
+
+  .supplier-card .card-head .supplier-logo {
+    grid-area: logo;
+    justify-self: start;
+  }
+
+  .supplier-card .card-head .card-identity {
+    grid-area: identity;
+  }
+
+  .supplier-card .card-title {
+    font-size: 18px;
+  }
+
+  /* Flatten the actions wrapper so each button can take its own grid area. */
+  .supplier-card .card-head .card-actions {
+    display: contents;
+  }
+
+  .supplier-card .card-head .card-save {
+    grid-area: save;
+  }
+
+  .supplier-card .card-head .card-select {
+    grid-area: select;
+  }
+
+  .supplier-card .card-head .card-cta {
+    grid-area: cta;
+    width: 100%;
+    height: 44px;
+  }
+
+  /* Save/select read as icon buttons here; the label stays for screen
+     readers via aria-label on the buttons. */
+  .supplier-card .card-head .card-action-label {
+    display: none;
+  }
+}
+
+/* Phone: stack the panes; the agent reads as a sheet above the results. */
+@media (max-width: 640px) {
   .app-main {
     grid-template-columns: 1fr !important;
     overflow-y: auto;
@@ -273,6 +405,9 @@ p,
   }
   .pane {
     max-height: none;
+  }
+  .results-list[data-layout="grid"] {
+    grid-template-columns: 1fr;
   }
 }
 
