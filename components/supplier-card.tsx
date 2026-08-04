@@ -120,11 +120,11 @@ export function SupplierCard({
   return (
     <l-panel class="supplier-card">
       {/* Header row: identity + actions */}
-      <div className="flex gap-3 align-items-start">
+      <div className="card-head flex gap-3 align-items-start">
         <div className="supplier-logo" aria-hidden="true">
           {monogram(supplier.name)}
         </div>
-        <div className="flex-1">
+        <div className="card-identity flex-1">
           <div className="flex align-items-center gap-2">
             <a href="#" className="card-title" onClick={noop}>
               {supplier.name}
@@ -143,21 +143,32 @@ export function SupplierCard({
             View Profile
           </a>
         </div>
-        <div className="flex align-items-center gap-2 flex-shrink-0">
-          <button kind="neutral-text" scale="small" aria-pressed={saved} onClick={onToggleSave}>
-            <l-icon name="bookmark" fill={saved || undefined} /> {saved ? "Saved" : "Save"}
+        <div className="card-actions flex align-items-center gap-2 flex-shrink-0">
+          <button
+            kind="neutral-text"
+            scale="small"
+            className="card-save"
+            aria-pressed={saved}
+            aria-label={saved ? "Saved" : "Save"}
+            onClick={onToggleSave}
+          >
+            <l-icon name="bookmark" fill={saved || undefined} />{" "}
+            <span className="card-action-label">{saved ? "Saved" : "Save"}</span>
           </button>
           <button
             kind="neutral-text"
             scale="small"
+            className="card-select"
             aria-pressed={selected}
+            aria-label={selected ? "Selected" : "Select"}
             disabled={selectDisabled}
             title={selectDisabled ? "Quote requests go to at most 5 suppliers" : undefined}
             onClick={onToggleSelect}
           >
-            <l-icon name={selected ? "circle-check" : "circle-plus"} /> {selected ? "Selected" : "Select"}
+            <l-icon name={selected ? "circle-check" : "circle-plus"} />{" "}
+            <span className="card-action-label">{selected ? "Selected" : "Select"}</span>
           </button>
-          <button kind="primary" scale="small" onClick={noop}>
+          <button kind="primary" scale="small" className="card-cta" onClick={noop}>
             Visit Website <l-icon name="arrow-up-right-from-square" />
           </button>
         </div>
