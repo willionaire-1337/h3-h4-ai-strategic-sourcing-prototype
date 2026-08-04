@@ -1,11 +1,19 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { FilterDrawer, type FilterGroup } from "@/components/filter-drawer";
 import { SupplierCard } from "@/components/supplier-card";
 import {
+  capabilitiesForMaterials,
+  certificationsForAnswers,
+  locationFromAnswers,
+  mapCertificationOption,
+  materialsFromCapabilities,
+} from "@/lib/filter-sync";
+import {
   questionById,
   candidatesFor,
+  LOCATION_QUESTION_ID,
   MATCH_FLOOR,
   matchSetFor,
   railTarget,
@@ -13,17 +21,38 @@ import {
   type LoggedAnswer,
 } from "@/lib/simulation";
 import { planScreening, scoreRecord } from "@/lib/screening";
-import { CATEGORY_LABEL, CATEGORY_SUPPLIER_COUNT, type Supplier } from "@/lib/suppliers";
+import { CATEGORY_SUPPLIER_COUNT, type Supplier } from "@/lib/suppliers";
 
 const PAGE_SIZE = 25;
 /** Suppliers one quote request can go out to. */
 const SELECTION_LIMIT = 5;
+
+/** Short uppercase label shown above each answer chip in the results header. */
+const FACET_LABELS: Record<string, string> = {
+  process: "PROCESS",
+  material: "MATERIAL",
+  stock: "THICKNESS",
+  qty: "QUANTITY",
+  size: "SIZE",
+  tooling: "TOOLING",
+  tol: "TOLERANCE",
+  loc: "LOCATION",
+  features: "FEATURES",
+  part: "PART TYPE",
+  app: "INDUSTRY",
+  cert: "CERTIFICATIONS",
+  diverse: "DIVERSITY",
+};
 
 type SupplierResultsProps = {
   answers: LoggedAnswer[];
   query: string;
   /** Drops a logged answer when its pill is dismissed. */
   onRemoveAnswer: (questionId: string) => void;
+  /** Writes a mapped All Filters pick into the agent answers (or clears it). */
+  onApplyFilterAnswer: (questionId: string, values: string[] | null) => void;
+  /** Clears every questionnaire-backed drawer facet in one shot. */
+  onClearMappedAnswers: () => void;
 };
 
 /**
@@ -31,19 +60,56 @@ type SupplierResultsProps = {
  * matching everything logged so far (best first), and a persistent action
  * footer — select all, contact, shortlist, export, save.
  */
-export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResultsProps) {
+export function SupplierResults({
+  answers,
+  query,
+  onRemoveAnswer,
+  onApplyFilterAnswer,
+  onClearMappedAnswers,
+}: SupplierResultsProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [location, setLocation] = useState("");
+  /** Draft for the drawer location field while typing; commits into answers. */
+  const [locationDraft, setLocationDraft] = useState("");
   /** Classic facet rail, opened from "All Filters". */
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [partnerOnly, setPartnerOnly] = useState(false);
-  /** Checked options per facet group id. */
-  const [facetPicks, setFacetPicks] = useState<Record<string, string[]>>({});
+  /** Local-only facets (no questionnaire twin) — e.g. company type. */
+  const [localFacetPicks, setLocalFacetPicks] = useState<Record<string, string[]>>({});
+  /** Soft shadow under the sticky header once the results list has scrolled. */
+  const [scrolled, setScrolled] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const locationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const logged = answers.filter((answer) => !answer.skipped && answer.values.length > 0);
+
+  // Keep the drawer location field aligned with the loc answer when it changes
+  // from the left rail (or a committed drawer edit).
+  const answerLocation = locationFromAnswers(answers);
+  useEffect(() => {
+    if (answerLocation === null) {
+      setLocationDraft("");
+      return;
+    }
+    setLocationDraft(answerLocation);
+  }, [answerLocation]);
+
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    const onScroll = () => setScrolled(scroller.scrollTop > 0);
+    onScroll();
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => scroller.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (locationTimer.current) clearTimeout(locationTimer.current);
+    };
+  }, []);
 
   /** Suppliers in the category still matching — the number the buyer is shown. */
   const matchTotal = simulatedMatchCount(answers);
@@ -56,19 +122,13 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
       `${query} ${logged.map((answer) => answer.values.join(" ")).join(" ")}`,
       [],
     );
-    const place = location.trim().toLowerCase();
-    const inPlace = (supplier: Supplier) =>
-      place === "" ||
-      `${supplier.city}, ${supplier.state} ${supplier.zip}`.toLowerCase().includes(place);
-    const types = facetPicks.companyType ?? [];
-    const certs = facetPicks.certification ?? [];
+    const types = localFacetPicks.companyType ?? [];
     const passesFacets = (supplier: Supplier) =>
       (!verifiedOnly || supplier.verified === true) &&
-      (types.length === 0 || types.some((type) => supplier.companyTypes.includes(type))) &&
-      (certs.length === 0 || certs.some((cert) => supplier.certifications.includes(cert)));
+      (types.length === 0 || types.some((type) => supplier.companyTypes.includes(type)));
     const rank = (group: Supplier[]) =>
       group
-        .filter((supplier) => inPlace(supplier) && passesFacets(supplier))
+        .filter((supplier) => passesFacets(supplier))
         .sort((a, b) => {
           const scoreDelta = scoreRecord(b, plan) - scoreRecord(a, plan);
           if (scoreDelta !== 0) return scoreDelta;
@@ -83,7 +143,7 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
       relaxed: set.relaxed,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answers, matchTotal, query, location, verifiedOnly, facetPicks]);
+  }, [answers, matchTotal, query, verifiedOnly, localFacetPicks]);
 
   const results = useMemo(() => [...exact, ...near], [exact, near]);
 
@@ -102,21 +162,90 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
     ];
   }, []);
 
+  const materialOptions =
+    filterGroups.find((group) => group.id === "material")?.options ?? [];
+  const certificationOptions =
+    filterGroups.find((group) => group.id === "certification")?.options ?? [];
+
+  // Mapped facets are derived from answers so the drawer and left rail stay in sync.
+  const materialAnswer = logged.find((answer) => answer.questionId === "material");
+  const syncedCertifications = certificationsForAnswers(answers, certificationOptions);
+  const localCertifications = (localFacetPicks.certification ?? []).filter(
+    (option) => mapCertificationOption(option) == null,
+  );
+  const facetPicks: Record<string, string[]> = {
+    ...localFacetPicks,
+    material: capabilitiesForMaterials(materialAnswer?.values ?? [], materialOptions),
+    certification: [...syncedCertifications, ...localCertifications],
+  };
+
   const filterCount =
     (verifiedOnly ? 1 : 0) +
     (partnerOnly ? 1 : 0) +
-    (location.trim() ? 1 : 0) +
+    (locationDraft.trim() ? 1 : 0) +
     Object.values(facetPicks).reduce((total, values) => total + values.length, 0);
 
   const clearFilters = () => {
     setVerifiedOnly(false);
     setPartnerOnly(false);
-    setLocation("");
-    setFacetPicks({});
+    setLocationDraft("");
+    setLocalFacetPicks({});
+    if (locationTimer.current) clearTimeout(locationTimer.current);
+    onClearMappedAnswers();
   };
 
-  const toggleFacet = (groupId: string, option: string) =>
-    setFacetPicks((current) => {
+  const commitLocation = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      onApplyFilterAnswer(LOCATION_QUESTION_ID, null);
+      return;
+    }
+    onApplyFilterAnswer(LOCATION_QUESTION_ID, [trimmed]);
+  };
+
+  const onLocation = (value: string) => {
+    setLocationDraft(value);
+    if (locationTimer.current) clearTimeout(locationTimer.current);
+    locationTimer.current = setTimeout(() => commitLocation(value), 400);
+  };
+
+  const toggleFacet = (groupId: string, option: string) => {
+    if (groupId === "material") {
+      const currentCaps = new Set(facetPicks.material ?? []);
+      if (currentCaps.has(option)) currentCaps.delete(option);
+      else currentCaps.add(option);
+      const materials = materialsFromCapabilities([...currentCaps]);
+      onApplyFilterAnswer("material", materials.length > 0 ? materials : null);
+      return;
+    }
+
+    if (groupId === "certification") {
+      const mapped = mapCertificationOption(option);
+      if (!mapped) {
+        // No questionnaire twin — keep it local only.
+        setLocalFacetPicks((current) => {
+          const chosen = current[groupId] ?? [];
+          return {
+            ...current,
+            [groupId]: chosen.includes(option)
+              ? chosen.filter((entry) => entry !== option)
+              : [...chosen, option],
+          };
+        });
+        return;
+      }
+
+      const questionAnswers =
+        answers.find((answer) => answer.questionId === mapped.questionId && !answer.skipped)
+          ?.values ?? [];
+      const next = questionAnswers.includes(mapped.value)
+        ? questionAnswers.filter((value) => value !== mapped.value)
+        : [...questionAnswers, mapped.value];
+      onApplyFilterAnswer(mapped.questionId, next.length > 0 ? next : null);
+      return;
+    }
+
+    setLocalFacetPicks((current) => {
       const chosen = current[groupId] ?? [];
       return {
         ...current,
@@ -125,10 +254,12 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
           : [...chosen, option],
       };
     });
+  };
 
   const facets = logged.map((answer) => ({
     id: answer.questionId,
     title: questionById(answer.questionId)?.title ?? "",
+    label: FACET_LABELS[answer.questionId] ?? (questionById(answer.questionId)?.title ?? "").toUpperCase(),
     value: answer.values.join(", "),
   }));
 
@@ -143,17 +274,10 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
 
   return (
     <>
-      <div className="results-header">
+      <div className="results-header" data-scrolled={scrolled || undefined}>
         <div className="results-meta">
           <div className="results-headline">
-            <div className="flex align-items-center gap-2">
-              <l-icon
-                name="magnifying-glass"
-                class="txt-blue-100 results-title-icon"
-                aria-hidden="true"
-              />
-              <h3 className="mar-0">{CATEGORY_LABEL} Suppliers</h3>
-            </div>
+            <h3 className="mar-0">Suppliers that match your need</h3>
             <p className="mar-0 txt-smaller txt-darkblue-75">
               <span className="txt-blue-100 font-semi">{matchTotal.toLocaleString()}</span> suppliers
               of {CATEGORY_SUPPLIER_COUNT.toLocaleString()} verified suppliers match your query.
@@ -168,24 +292,26 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
           </button>
         </div>
         {facets.length > 0 && (
-          <div className="flex flex-wrap gap-2 mar-t-2">
+          <div className="answer-pill-row">
             {facets.map((facet) => (
-              <button
-                type="button"
-                className="answer-pill"
-                key={facet.id}
-                aria-label={`Remove ${facet.title}: ${facet.value}`}
-                onClick={() => onRemoveAnswer(facet.id)}
-              >
-                {facet.value}
-                <l-icon name="xmark" />
-              </button>
+              <div className="answer-pill-stack" key={facet.id}>
+                <span className="answer-pill-label">{facet.label}</span>
+                <button
+                  type="button"
+                  className="answer-pill"
+                  aria-label={`Remove ${facet.title}: ${facet.value}`}
+                  onClick={() => onRemoveAnswer(facet.id)}
+                >
+                  {facet.value}
+                  <l-icon name="xmark" />
+                </button>
+              </div>
             ))}
           </div>
         )}
       </div>
 
-      <div className="pane-scroll">
+      <div className="pane-scroll" ref={scrollRef}>
         <div className="results-list">
           {results.slice(0, visibleCount).map((supplier, index) => (
             <Fragment key={supplier.id}>
@@ -275,8 +401,8 @@ export function SupplierResults({ answers, query, onRemoveAnswer }: SupplierResu
         onVerifiedOnly={setVerifiedOnly}
         partnerOnly={partnerOnly}
         onPartnerOnly={setPartnerOnly}
-        location={location}
-        onLocation={setLocation}
+        location={locationDraft}
+        onLocation={onLocation}
         selectedCount={filterCount}
         onClearAll={clearFilters}
       />

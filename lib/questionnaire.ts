@@ -21,6 +21,7 @@ export type Question = {
    */
   location?: boolean
   ask: string
+  /** Short buyer-facing note on what the options cover and why they matter. */
   hint: string
   options: QuestionOption[]
 }

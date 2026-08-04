@@ -22,8 +22,21 @@ export type LoggedAnswer = {
   questionId: string
   /** Option values chosen, or a free-form entry as a single value. */
   values: string[]
-  /** True when the buyer skipped or answered "not sure". */
+  /** True when the buyer skipped or answered "I don't know". */
   skipped?: boolean
+}
+
+/** Always offered last on every ask — logs as skipped so it never filters. */
+export const DONT_KNOW_OPTION = "I don't know"
+
+export function isDontKnowOption(value: string): boolean {
+  return value === DONT_KNOW_OPTION
+}
+
+/** Append {@link DONT_KNOW_OPTION} after pruning so viability can't drop it. */
+function withDontKnow(options: string[]): string[] {
+  if (options.includes(DONT_KNOW_OPTION)) return options
+  return [...options, DONT_KNOW_OPTION]
 }
 
 /**
@@ -391,6 +404,30 @@ export type NextAsk = {
 }
 
 /**
+ * Build the ask payload for a specific question — same option pruning as
+ * {@link nextAsk}, but without walking the sequence. Used when the buyer
+ * jumps to a question from the browse list.
+ */
+export function askForQuestion(questionId: string, _answers: LoggedAnswer[] = []): NextAsk | null {
+  if (NON_FILTERING_QUESTIONS.has(questionId)) return null
+  const question = questionById(questionId)
+  if (!question) return null
+  if (question.location) {
+    return { question, options: withDontKnow(question.options.map((option) => option.value)) }
+  }
+  const plan = planField(
+    ALL_CANDIDATES,
+    question.options.map((option) => option.value),
+  )
+  // Still offer the question in browse even when the model would skip it in
+  // the live run — the buyer may want to answer it for the RFQ.
+  const options = plan.skip || plan.options.length === 0
+    ? question.options.map((option) => option.value)
+    : plan.options
+  return { question, options: withDontKnow(options) }
+}
+
+/**
  * The order the run works through, set by the sourcing team's ask sequence
  * rather than by raw importance score. There is no fixed question count: an
  * entry is only ever asked while it can still earn its place, so how many
@@ -421,6 +458,14 @@ export const ASK_SEQUENCE = [
   "diverse",
 ]
 
+/** Every question the browse list can surface, in ask order. */
+export function browseableQuestionIds(): string[] {
+  return ASK_SEQUENCE.filter((questionId) => {
+    if (NON_FILTERING_QUESTIONS.has(questionId)) return false
+    return questionById(questionId) != null
+  })
+}
+
 /**
  * The next question worth asking: the first unanswered question in the ask
  * sequence that earns its place — some answer to it would still materially
@@ -446,7 +491,10 @@ export function nextAsk(answers: LoggedAnswer[]): NextAsk | null {
     // option-narrowing checks below don't apply — any real place narrows the
     // set, and "National" is the explicit opt-out.
     if (question.location) {
-      return { question, options: question.options.map((option) => option.value) }
+      return {
+        question,
+        options: withDontKnow(question.options.map((option) => option.value)),
+      }
     }
     const plan = planField(
       candidates,
@@ -459,7 +507,7 @@ export function nextAsk(answers: LoggedAnswer[]): NextAsk | null {
       (option) => dampedShare([option]) <= 1 - MATERIAL_CUT,
     )
     if (!narrows) continue
-    return { question, options: plan.options }
+    return { question, options: withDontKnow(plan.options) }
   }
   return null
 }
