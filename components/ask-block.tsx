@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import { locationSuggestions } from "@/lib/locations";
-import type { NextAsk } from "@/lib/simulation";
+import { DONT_KNOW_OPTION, type NextAsk } from "@/lib/simulation";
 
 /** Most rows of options to offer, however tall the window gets. */
 const MAX_OPTION_ROWS = 6;
@@ -11,20 +11,20 @@ const ASSUMED_VISIBLE = 8;
 
 type AskBlockProps = {
   ask: NextAsk;
-  status: "active" | "answered" | "skipped";
+  status: "active" | "answered" | "skipped" | "unanswered";
   /** What the buyer picked, shown in place of the option rows once settled. */
   answer?: string[];
-  /**
-   * 1-based place in the run of questions, shown in the step line. There is
-   * no denominator: the run has no fixed question count — it continues only
-   * while the match set exceeds the shortlist target.
-   */
-  position: number;
   /** Selection for the active ask, restored when a question is reopened. */
   picked: string[];
   onSelect: (value: string) => void;
   /** Reopens a settled question so the buyer can change what they picked. */
   onEdit?: () => void;
+  /**
+   * Compact browse row: question + status only. Clicking opens the question
+   * so the buyer can keep answering from there.
+   */
+  collapsed?: boolean;
+  onOpen?: () => void;
 };
 
 /**
@@ -80,19 +80,47 @@ function useFittedOptionCount(gridRef: React.RefObject<HTMLDivElement | null>, t
   return fitted;
 }
 
+/** One option row. */
+function OptionRow({
+  option,
+  pressed,
+  single,
+  onSelect,
+}: {
+  option: string;
+  pressed: boolean;
+  single: boolean;
+  onSelect: (value: string) => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="option-row"
+      aria-pressed={pressed}
+      onClick={() => onSelect(option)}
+    >
+      <span className="row-indicator" data-single={single || undefined} aria-hidden="true">
+        {pressed && <l-icon name="check" />}
+      </span>
+      <span className="option-row-label">{option}</span>
+    </button>
+  );
+}
+
 /**
- * One question in the run: step line, the question itself, and its option
- * rows. Picking an option answers the question outright; Back / Skip float
- * over the foot of the card.
+ * One question in the run: the question itself and its option rows. Picking
+ * an option answers the question outright; Back / Skip float over the foot
+ * of the card.
  */
 export function AskBlock({
   ask,
   status,
   answer,
-  position,
   picked,
   onSelect,
   onEdit,
+  collapsed = false,
+  onOpen,
 }: AskBlockProps) {
   const { question, options } = ask;
   const [expanded, setExpanded] = useState(false);
@@ -119,8 +147,21 @@ export function AskBlock({
   const gridRef = useRef<HTMLDivElement>(null);
   const fitted = useFittedOptionCount(gridRef, active ? options.length : 0);
 
-  const visible = expanded ? options : options.slice(0, fitted);
+  // Keep "I don't know" on-screen even when other options collapse behind +more.
+  const visible = (() => {
+    if (expanded || options.length <= fitted) return options;
+    const core = options.filter((option) => option !== DONT_KNOW_OPTION);
+    if (core.length === options.length) return options.slice(0, fitted);
+    return [...core.slice(0, Math.max(0, fitted - 1)), DONT_KNOW_OPTION];
+  })();
   const hiddenCount = options.length - visible.length;
+
+  const settledLabel =
+    answer && answer.length > 0
+      ? answer.join(", ")
+      : status === "skipped"
+        ? "Skipped"
+        : null;
 
   const edit = onEdit ? (
     <button
@@ -134,35 +175,52 @@ export function AskBlock({
     </button>
   ) : null;
 
+  if (collapsed) {
+    const summary =
+      status === "unanswered"
+        ? "Not answered"
+        : settledLabel
+          ? settledLabel
+          : active
+            ? "In progress"
+            : "Skipped";
+    return (
+      <button
+        type="button"
+        className="ask-block ask-collapsed"
+        data-status={status}
+        onClick={onOpen}
+        aria-label={`Open question: ${question.ask}`}
+      >
+        <span className="ask-collapsed-ask">{question.ask}</span>
+        <span className="ask-collapsed-summary" data-status={status}>
+          {status === "answered" && <l-icon name="check" aria-hidden="true" />}
+          {summary}
+        </span>
+      </button>
+    );
+  }
+
   return (
     <div className="ask-block" aria-disabled={active ? undefined : true}>
-      <div className="kicker ask-kicker">
-        Question {position} · {question.title}
-      </div>
       <h5 className="ask-question mar-0">{question.ask}</h5>
-      {active && (
-        <p className="ask-help mar-0">
-          {question.location
-            ? "Enter a ZIP code, city, or state — or select National for no preference."
-            : question.multi
-              ? "Pick every option that applies — each answer narrows the list."
-              : "Pick the closest match — each answer narrows the list."}
+      {active && <p className="ask-help mar-0">{question.hint}</p>}
+
+      {!active && (
+        <p
+          className={
+            answer && answer.length > 0 && status !== "skipped"
+              ? "mar-0 ask-settled ask-answer"
+              : "mar-0 ask-settled ask-skipped"
+          }
+        >
+          {answer && answer.length > 0 && status !== "skipped" && (
+            <l-icon name="check" aria-hidden="true" />
+          )}
+          {settledLabel ?? "Skipped"}
+          {edit}
         </p>
       )}
-
-      {!active &&
-        (status === "skipped" || !answer?.length ? (
-          <p className="mar-0 ask-settled txt-darkblue-50">
-            Skipped
-            {edit}
-          </p>
-        ) : (
-          <p className="mar-0 ask-settled ask-answer">
-            <l-icon name="check" aria-hidden="true" />
-            {answer.join(", ")}
-            {edit}
-          </p>
-        ))}
 
       {active && question.location && (
         <form
@@ -246,22 +304,13 @@ export function AskBlock({
         (options.length > 0 ? (
           <div className="option-rows" role="group" aria-label={question.title} ref={gridRef}>
             {visible.map((option) => (
-              <button
+              <OptionRow
                 key={option}
-                type="button"
-                className="option-row"
-                aria-pressed={picked.includes(option)}
-                onClick={() => onSelect(option)}
-              >
-                <span
-                  className="row-indicator"
-                  data-single={question.multi ? undefined : true}
-                  aria-hidden="true"
-                >
-                  {picked.includes(option) && <l-icon name="check" />}
-                </span>
-                {option}
-              </button>
+                option={option}
+                pressed={picked.includes(option)}
+                single={!question.multi}
+                onSelect={onSelect}
+              />
             ))}
             {hiddenCount > 0 && (
               <button type="button" className="option-row row-more" onClick={() => setExpanded(true)}>

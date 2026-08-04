@@ -7,46 +7,46 @@
     "tier": "core",
     "multi": false,
     "ask": "Which stamping process does your part need?",
-    "hint": "Attribute 31128 Capabilities. Deep-draw parts (depth greater than diameter) are quoted by the Deep Drawing Services family, not here.",
+    "hint": "Progressive die, fine blanking, deep draw, and other ways the part is formed.",
     "options": [
       {
         "value": "Progressive Die",
-        "note": "1007308 \u00b7 multi-stage, one dieset, coil-fed",
+        "note": "1007308 · multi-stage, one dieset, coil-fed",
         "taxonomyId": "78654001"
       },
       {
         "value": "Transfer Die",
-        "note": "1007360 \u00b7 part carried between dies",
+        "note": "1007360 · part carried between dies",
         "taxonomyId": "79380721"
       },
       {
         "value": "Transfer Press",
-        "note": "1007853 \u00b7 press-level transfer",
+        "note": "1007853 · press-level transfer",
         "taxonomyId": "62781661"
       },
       {
         "value": "Punch Press",
-        "note": "996936 \u00b7 single-station punch press",
+        "note": "996936 · single-station punch press",
         "taxonomyId": "62781661"
       },
       {
         "value": "Compound Die",
-        "note": "1007307 \u00b7 cut + form in one stroke",
+        "note": "1007307 · cut + form in one stroke",
         "taxonomyId": "78361003"
       },
       {
         "value": "Fourslide",
-        "note": "1007220 \u00b7 wireform-style bends",
+        "note": "1007220 · wireform-style bends",
         "taxonomyId": "78520301"
       },
       {
-        "value": "Multislide\u00ae",
-        "note": "1007839 \u00b7 Multislide\u00ae",
+        "value": "Multislide®",
+        "note": "1007839 · Multislide®",
         "taxonomyId": "78570207"
       },
       {
         "value": "Fine blanking",
-        "note": "1007362 \u00b7 fully sheared, no die-roll",
+        "note": "1007362 · fully sheared, no die-roll",
         "taxonomyId": "29420601"
       },
       {
@@ -61,7 +61,7 @@
       },
       {
         "value": "Reel-to-reel",
-        "note": "1007364 \u00b7 continuous carrier",
+        "note": "1007364 · continuous carrier",
         "taxonomyId": "97003698"
       },
       {
@@ -71,7 +71,7 @@
       },
       {
         "value": "High speed",
-        "note": "965653 \u00b7 hundreds of parts/min",
+        "note": "965653 · hundreds of parts/min",
         "taxonomyId": "7683"
       },
       {
@@ -81,7 +81,7 @@
         "routesToDeepDrawing": true
       },
       {
-        "value": "Not sure \u2014 recommend",
+        "value": "Not sure — recommend",
         "note": "agent proposes from part geometry",
         "taxonomyId": "97001062"
       }
@@ -95,51 +95,51 @@
     "tier": "core",
     "multi": false,
     "ask": "What material will the part be stamped from?",
-    "hint": "Attribute 28258 Materials \u2014 all 39 values from the export. Cold work raises surface hardness; brittle grades may need inter-stage annealing.",
+    "hint": "Aluminum, steel, brass, copper, and other metals the blank is made from.",
     "options": [
       {
         "value": "Metal",
-        "note": "908908 \u00b7 16 suppliers",
+        "note": "908908 · 16 suppliers",
         "taxonomyId": "78560109"
       },
       {
         "value": "Aluminum",
-        "note": "907909 \u00b7 2 suppliers",
+        "note": "907909 · 2 suppliers",
         "taxonomyId": "78270204"
       },
       {
         "value": "Sheet Metal",
-        "note": "908916 \u00b7 2 suppliers",
+        "note": "908916 · 2 suppliers",
         "taxonomyId": "78680154"
       },
       {
         "value": "Brass",
-        "note": "907925 \u00b7 1 suppliers",
+        "note": "907925 · 1 suppliers",
         "taxonomyId": "78330404"
       },
       {
         "value": "Bronze",
-        "note": "908831 \u00b7 1 suppliers",
+        "note": "908831 · 1 suppliers",
         "taxonomyId": "78330404"
       },
       {
         "value": "Copper",
-        "note": "907931 \u00b7 1 suppliers",
+        "note": "907931 · 1 suppliers",
         "taxonomyId": "78330404"
       },
       {
         "value": "Precious Metals",
-        "note": "907956 \u00b7 1 suppliers",
+        "note": "907956 · 1 suppliers",
         "taxonomyId": "78630605"
       },
       {
         "value": "Stainless Steel",
-        "note": "907964 \u00b7 1 suppliers",
+        "note": "907964 · 1 suppliers",
         "taxonomyId": "79340808"
       },
       {
         "value": "Steel",
-        "note": "907965 \u00b7 1 suppliers",
+        "note": "907965 · 1 suppliers",
         "taxonomyId": "79360202"
       },
       {
@@ -193,12 +193,12 @@
         "taxonomyId": "2332"
       },
       {
-        "value": "Kapton\u00ae",
+        "value": "Kapton®",
         "note": "997909",
         "taxonomyId": "97012794"
       },
       {
-        "value": "Kovar\u00ae",
+        "value": "Kovar®",
         "note": "908905",
         "taxonomyId": "96002589"
       },
@@ -243,7 +243,7 @@
         "taxonomyId": "78610201"
       },
       {
-        "value": "Nitinol\u00ae",
+        "value": "Nitinol®",
         "note": "908910",
         "taxonomyId": "96129879"
       },
@@ -302,7 +302,7 @@
     "tier": "core",
     "multi": false,
     "ask": "How thick is the material?",
-    "hint": "Numeric thickness has no taxonomy node, but gauge class and feed format do. Gauge trap: sheet steel uses MSG, nonferrous uses B&S/AWG \u2014 12 ga steel = 0.1046\", 12 ga aluminum = 0.0808\".",
+    "hint": "Foil, thin gauge, heavy gauge, coil, or sheet — how thick the stock is.",
     "options": [
       {
         "value": "Foil gauge",
@@ -335,7 +335,7 @@
       },
       {
         "value": "Sheet / blank feed",
-        "note": "908916 \u00b7 2 suppliers",
+        "note": "908916 · 2 suppliers",
         "taxonomyId": "78680154"
       },
       {
@@ -352,21 +352,21 @@
     "tier": "core",
     "multi": false,
     "ask": "How many parts do you need?",
-    "hint": "Attribute 492 Production Volume \u2014 die amortization makes stamping economics volume-driven.",
+    "hint": "Prototype, short run, production, or high volume — how many parts you need.",
     "options": [
       {
         "value": "Prototype",
-        "note": "881268 \u00b7 1 suppliers",
+        "note": "881268 · 1 suppliers",
         "taxonomyId": "78655008"
       },
       {
         "value": "Short Run",
-        "note": "881269 \u00b7 stock tooling",
+        "note": "881269 · stock tooling",
         "taxonomyId": "79140208"
       },
       {
         "value": "Production Runs",
-        "note": "965372 \u00b7 4 suppliers",
+        "note": "965372 · 4 suppliers",
         "taxonomyId": "96013743"
       },
       {
@@ -376,7 +376,7 @@
       },
       {
         "value": "High Volume",
-        "note": "881267 \u00b7 2 suppliers",
+        "note": "881267 · 2 suppliers",
         "taxonomyId": "78520657"
       },
       {
@@ -392,11 +392,11 @@
     "tier": "core",
     "multi": false,
     "ask": "Roughly how big is the part?",
-    "hint": "Size classes are real capability values; the numeric envelope is not. Formed depth greater than width flips the job to deep drawing.",
+    "hint": "Micro, miniature, small, or large — roughly how big the part is.",
     "options": [
       {
         "value": "Micro",
-        "note": "1007363 \u00b7 2 suppliers",
+        "note": "1007363 · 2 suppliers",
         "taxonomyId": "95924544"
       },
       {
@@ -416,7 +416,7 @@
       },
       {
         "value": "Small",
-        "note": "1007862 \u00b7 1 suppliers",
+        "note": "1007862 · 1 suppliers",
         "taxonomyId": "79240404"
       },
       {
@@ -449,7 +449,7 @@
     "tier": "core",
     "multi": false,
     "ask": "What's the tooling situation?",
-    "hint": "Dies dominate cost and lead time. Ownership and amortization terms have no taxonomy node.",
+    "hint": "New die, open/stock tooling, or an existing die you want transferred.",
     "options": [
       {
         "value": "New die design & build",
@@ -458,16 +458,16 @@
       },
       {
         "value": "Open / stock tooling",
-        "note": "1007840 \u00b7 no die investment",
+        "note": "1007840 · no die investment",
         "taxonomyId": "96202353"
       },
       {
         "value": "Custom-engineered tooling",
-        "note": "880862 \u00b7 2 suppliers",
+        "note": "880862 · 2 suppliers",
         "taxonomyId": "78362001"
       },
       {
-        "value": "Existing die \u2014 transfer to new supplier"
+        "value": "Existing die — transfer to new supplier"
       }
     ]
   },
@@ -479,7 +479,7 @@
     "tier": "adaptive",
     "multi": false,
     "ask": "How tight are the tolerances?",
-    "hint": "Attribute 31128 Capabilities.",
+    "hint": "Commercial, close, precision, or high precision — how tight the dimensions must be.",
     "options": [
       {
         "value": "Standard commercial tolerance"
@@ -491,12 +491,12 @@
       },
       {
         "value": "Precision",
-        "note": "965679 \u00b7 4 suppliers",
+        "note": "965679 · 4 suppliers",
         "taxonomyId": "78630803"
       },
       {
         "value": "High precision",
-        "note": "965677 \u00b7 2 suppliers",
+        "note": "965677 · 2 suppliers",
         "taxonomyId": "96004619"
       }
     ]
@@ -510,7 +510,7 @@
     "multi": false,
     "location": true,
     "ask": "Where should suppliers be located?",
-    "hint": "Asked third: the buyer types a ZIP code, city, or state, or selects National for no geographic preference. Distinct from Q7 ship-to, which is the part destination.",
+    "hint": "A ZIP, city, or state you prefer — or National for anywhere.",
     "options": [
       {
         "value": "National",
@@ -526,7 +526,7 @@
     "tier": "adaptive",
     "multi": true,
     "ask": "Does the part need anything beyond the stamping itself?",
-    "hint": "Attribute 28748 Stamping Features plus in-press capabilities and attribute 28031 Additional Services.",
+    "hint": "Heat treat, tapping, plating, embossing, and other finishing beyond the stamp.",
     "options": [
       {
         "value": "Heat treated",
@@ -595,7 +595,7 @@
       },
       {
         "value": "Assembly",
-        "note": "907345 \u00b7 stamped assemblies",
+        "note": "907345 · stamped assemblies",
         "taxonomyId": "78290004"
       },
       {
@@ -625,7 +625,7 @@
       },
       {
         "value": "Contract manufacturing",
-        "note": "907726 \u00b7 1 suppliers",
+        "note": "907726 · 1 suppliers",
         "taxonomyId": "97003671"
       },
       {
@@ -645,11 +645,11 @@
     "tier": "adaptive",
     "multi": false,
     "ask": "What is the part, in plain terms?",
-    "hint": "Attribute 28739 Stamping Products \u2014 all 18 values from the export.",
+    "hint": "End caps, connectors, brackets, filters, and similar part types.",
     "options": [
       {
         "value": "End Caps",
-        "note": "908971 \u00b7 1 suppliers",
+        "note": "908971 · 1 suppliers",
         "taxonomyId": "78500246"
       },
       {
@@ -747,7 +747,7 @@
     "tier": "adaptive",
     "multi": true,
     "ask": "What industry is this for?",
-    "hint": "Two attributes: 44 Industry Focus (9 values) and 5 Intended Application (16 values).",
+    "hint": "Aerospace, automotive, medical, electronics, and other industries.",
     "options": [
       {
         "value": "Aerospace",
@@ -761,7 +761,7 @@
       },
       {
         "value": "Automotive",
-        "note": "879452 \u00b7 2 suppliers",
+        "note": "879452 · 2 suppliers",
         "taxonomyId": "78300407"
       },
       {
@@ -771,17 +771,17 @@
       },
       {
         "value": "Electrical",
-        "note": "895056 \u00b7 1 suppliers",
+        "note": "895056 · 1 suppliers",
         "taxonomyId": "96167804"
       },
       {
         "value": "Electronics",
-        "note": "904084 \u00b7 1 suppliers",
+        "note": "904084 · 1 suppliers",
         "taxonomyId": "78480209"
       },
       {
         "value": "Medical and Dental",
-        "note": "879457 \u00b7 1 suppliers",
+        "note": "879457 · 1 suppliers",
         "taxonomyId": "78550407"
       },
       {
@@ -811,7 +811,7 @@
       },
       {
         "value": "Appliances",
-        "note": "888909 \u00b7 1 suppliers",
+        "note": "888909 · 1 suppliers",
         "taxonomyId": "78276003"
       },
       {
@@ -884,7 +884,7 @@
     "tier": "adaptive",
     "multi": true,
     "ask": "Do suppliers need to hold any certifications?",
-    "hint": "Attribute 127 supplies two taxonomy values; the remaining 126 quality / regulatory / compliance certifications come from the Thomasnet supplier certification list (heading \u201ccert\u201d), sorted by supplier count. Any Mil-Spec selection, including MIL-SPEC 45208A, drives the Stampings: Military Specification heading match.",
+    "hint": "ISO, Mil-Spec, Made in USA, AS9100, and other certifications.",
     "options": [
       {
         "value": "Mil-Spec (MS)",
@@ -1539,7 +1539,7 @@
     "tier": "adaptive",
     "multi": true,
     "ask": "Does this purchase need to count toward supplier-diversity goals?",
-    "hint": "Ownership / diversity classifications from the Thomasnet supplier certification list (heading \u201ccert\u201d), sorted by supplier count. Defaults to no requirement.",
+    "hint": "Woman-owned, veteran-owned, small business, and other diversity classifications.",
     "options": [
       {
         "value": "Woman Owned",

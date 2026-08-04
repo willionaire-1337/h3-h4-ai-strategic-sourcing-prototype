@@ -8,8 +8,11 @@ import { SupplierResults } from "@/components/supplier-results";
 import { ThinkingIndicator } from "@/components/thinking-indicator";
 import {
   FREE_TEXT_ENABLED,
+  askForQuestion,
+  browseableQuestionIds,
   impliedAnswers,
   introSummary,
+  isDontKnowOption,
   matchSetFor,
   mergeParsedAnswers,
   nextAsk,
@@ -22,9 +25,11 @@ import {
   type LoggedAnswer,
   type NextAsk,
 } from "@/lib/simulation";
-import { CATEGORY_LABEL, CATEGORY_SUPPLIER_COUNT } from "@/lib/suppliers";
+import { syncableQuestionIds } from "@/lib/filter-sync";
+import { CATEGORY_LABEL } from "@/lib/suppliers";
 
-const WELCOME = "Tell us about your need and we'll refine your results.";
+const OPT_OUT_HINT =
+  "Opt out of the Thomas Agent experience and go back to Thomas Classic sourcing";
 
 /**
  * The stall rule's "reasonable number of questions": a broad category that
@@ -32,9 +37,6 @@ const WELCOME = "Tell us about your need and we'll refine your results.";
  * gracefully with the best set it has rather than asking on.
  */
 const MAX_ASKS = 8;
-
-const OPT_OUT_HINT =
-  "Opt out of the Thomas Agent experience and go back to Thomas Classic sourcing";
 
 type TranscriptEntry =
   | { kind: "user"; id: number; text: string }
@@ -66,6 +68,14 @@ function nextId(): number {
   return ++entryId;
 }
 
+type BrowseItem = {
+  questionId: string;
+  entryId?: number;
+  ask: NextAsk;
+  status: "active" | "answered" | "skipped" | "unanswered";
+  answer?: string[];
+};
+
 /** The first core question — stamping process / method. */
 function makeIntro(): TranscriptEntry[] {
   const ask = nextAsk([]);
@@ -83,10 +93,15 @@ export function SourcingExperience() {
   const [thinking, setThinking] = useState(false);
   /** Whether the agent pane is open. Closing it hands the width to the rail. */
   const [agentOpen, setAgentOpen] = useState(true);
+  /**
+   * Compact accordion of every ask so far — answered, skipped, or still open —
+   * so the buyer can scan the run and jump back into a question.
+   */
+  const [browseAsks, setBrowseAsks] = useState(false);
   /** Registration gate over the whole page, up until the buyer signs in. */
   const [gateOpen, setGateOpen] = useState(true);
   /** Left pane width in px; dragged via the divider. */
-  const [leftWidth, setLeftWidth] = useState(640);
+  const [leftWidth, setLeftWidth] = useState(550);
   const [dragging, setDragging] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -100,6 +115,11 @@ export function SourcingExperience() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [transcript, thinking]);
+
+  useEffect(() => {
+    if (!browseAsks) return;
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [browseAsks]);
 
   const later = useCallback((ms: number, fn: () => void) => {
     timers.current.push(setTimeout(fn, ms));
@@ -321,22 +341,95 @@ export function SourcingExperience() {
   );
 
   /**
-   * Dismissing an answer pill in the results rail. The question card leaves the
-   * transcript along with the answer, so it reads as never asked and the run
-   * stays numbered 1..n. It's re-asked on the next advance; if a question is
-   * already on screen, that happens when the buyer answers it.
+   * Dismissing answer pills / clearing mapped filters. The question card leaves
+   * the transcript along with the answer, so it reads as never asked and can
+   * be re-queued on the next advance.
    */
-  const removeAnswer = useCallback(
-    (questionId: string) => {
-      const updated = answers.filter((answer) => answer.questionId !== questionId);
-      setAnswers(updated);
-      setTranscript((entries) =>
-        entries.filter((entry) => !(entry.kind === "ask" && entry.ask.question.id === questionId)),
+  const removeAnswers = useCallback(
+    (questionIds: string[]) => {
+      if (questionIds.length === 0) return;
+      const drop = new Set(questionIds);
+      const updated = answers.filter((answer) => !drop.has(answer.questionId));
+      const nextTranscript = transcript.filter(
+        (entry) => !(entry.kind === "ask" && drop.has(entry.ask.question.id)),
       );
-      const hasActive = transcript.some((entry) => entry.kind === "ask" && entry.status === "active");
+      setAnswers(updated);
+      setTranscript(nextTranscript);
+      const hasActive = nextTranscript.some(
+        (entry) => entry.kind === "ask" && entry.status === "active",
+      );
       if (!hasActive) advance(updated);
     },
     [advance, answers, transcript],
+  );
+
+  const removeAnswer = useCallback(
+    (questionId: string) => removeAnswers([questionId]),
+    [removeAnswers],
+  );
+
+  /**
+   * All Filters ↔ left rail: write a mapped facet into answers (or clear it so
+   * the question can be asked again). Settles or injects the matching ask card.
+   */
+  const applyFilterAnswer = useCallback(
+    (questionId: string, values: string[] | null) => {
+      if (!values || values.length === 0) {
+        removeAnswer(questionId);
+        return;
+      }
+
+      const updated = [
+        ...answers.filter((answer) => answer.questionId !== questionId),
+        { questionId, values, skipped: false },
+      ];
+      const activeSame = transcript.some(
+        (entry) =>
+          entry.kind === "ask" &&
+          entry.status === "active" &&
+          entry.ask.question.id === questionId,
+      );
+
+      let nextTranscript: TranscriptEntry[];
+      const hasCard = transcript.some(
+        (entry) => entry.kind === "ask" && entry.ask.question.id === questionId,
+      );
+      if (hasCard) {
+        nextTranscript = transcript.map((entry) =>
+          entry.kind === "ask" && entry.ask.question.id === questionId
+            ? { ...entry, status: "answered" as const, answer: values }
+            : entry,
+        );
+      } else {
+        const ask = askForQuestion(questionId, updated);
+        if (!ask) {
+          setAnswers(updated);
+          return;
+        }
+        const card: TranscriptEntry = {
+          kind: "ask",
+          id: nextId(),
+          ask,
+          status: "answered",
+          answer: values,
+        };
+        const activeIndex = transcript.findIndex(
+          (entry) => entry.kind === "ask" && entry.status === "active",
+        );
+        nextTranscript =
+          activeIndex === -1
+            ? [...transcript, card]
+            : [...transcript.slice(0, activeIndex), card, ...transcript.slice(activeIndex)];
+      }
+
+      setAnswers(updated);
+      setTranscript(nextTranscript);
+      if (activeSame) {
+        setPicked([]);
+        advance(updated);
+      }
+    },
+    [advance, answers, removeAnswer, transcript],
   );
 
   /**
@@ -385,6 +478,49 @@ export function SourcingExperience() {
     if (target) reopenAsk(target.id);
   }, [reopenAsk, transcript]);
 
+  /**
+   * Leave browse mode and open the chosen question — reopening settled ones
+   * so the buyer can keep answering from that point forward, or jumping to an
+   * unanswered question that hasn't been asked yet.
+   */
+  const openAskFromBrowse = useCallback(
+    (questionId: string, entryId?: number) => {
+      setBrowseAsks(false);
+      if (entryId != null) {
+        const target = transcript.find((entry) => entry.id === entryId);
+        if (target?.kind === "ask" && target.status !== "active") {
+          reopenAsk(entryId);
+        }
+        return;
+      }
+
+      // Logged without a card (e.g. from the opening message) — drop it and
+      // ask fresh so the buyer can change what was inferred.
+      const logged = answers.find((answer) => answer.questionId === questionId);
+      const nextAnswers = logged
+        ? answers.filter((answer) => answer.questionId !== questionId)
+        : answers;
+      if (logged) setAnswers(nextAnswers);
+
+      const ask = askForQuestion(questionId, nextAnswers);
+      if (!ask) return;
+      timers.current.forEach(clearTimeout);
+      timers.current = [];
+      setThinking(false);
+      setPicked([]);
+      setTranscript((entries) => [
+        ...entries.filter((entry) => !(entry.kind === "ask" && entry.status === "active")),
+        { kind: "ask", id: nextId(), ask, status: "active" },
+      ]);
+    },
+    [answers, reopenAsk, transcript],
+  );
+
+  const closeChat = useCallback(() => {
+    setBrowseAsks(false);
+    setAgentOpen(false);
+  }, []);
+
   const reset = useCallback(() => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
@@ -394,6 +530,7 @@ export function SourcingExperience() {
     setDraft("");
     setPicked([]);
     setThinking(false);
+    setBrowseAsks(false);
     setAgentOpen(true);
   }, []);
 
@@ -403,30 +540,49 @@ export function SourcingExperience() {
   );
   const hasActiveAsk = activeAsk != null;
   const started = transcript.some((entry) => entry.kind === "user");
-  /** Suppliers still matching everything logged — the header's live count. */
-  const liveMatch = simulatedMatchCount(answers);
   const canGoBack = transcript.some((entry) => entry.kind === "ask" && entry.status !== "active");
-  // There is no fixed question count to show progress against, so the header
-  // bar tracks the narrowing itself: how far the count has come down from the
-  // whole category toward the shortlist target, on a log scale so the early
-  // answers (which cut the most suppliers) don't swallow the whole bar.
-  const narrowing = Math.min(
-    1,
-    Math.log(CATEGORY_SUPPLIER_COUNT / Math.max(liveMatch, SHORTLIST_TARGET)) /
-      Math.log(CATEGORY_SUPPLIER_COUNT / SHORTLIST_TARGET),
-  );
-  // Numbered by the order they were actually asked, so the run reads 1, 2, 3
-  // even when the flow drops questions the supplier data can't narrow.
-  const askPositions = new Map<number, number>();
-  for (const entry of transcript) {
-    if (entry.kind === "ask") askPositions.set(entry.id, askPositions.size + 1);
-  }
-
   /** Picking an option answers the question outright and moves the run on. */
   const selectOption = (value: string) => {
     if (thinking) return;
+    // "I don't know" is an explicit opt-out — same as Skip for matching.
+    if (isDontKnowOption(value)) {
+      answerActive([value], true);
+      return;
+    }
     answerActive([value], false);
   };
+
+  /** Full questionnaire for browse mode — answered, skipped, active, or not yet asked. */
+  const browseItems: BrowseItem[] = [];
+  for (const questionId of browseableQuestionIds()) {
+    const entry = transcript.find(
+      (item): item is Extract<TranscriptEntry, { kind: "ask" }> =>
+        item.kind === "ask" && item.ask.question.id === questionId,
+    );
+    if (entry) {
+      browseItems.push({
+        questionId,
+        entryId: entry.id,
+        ask: entry.ask,
+        status: entry.status,
+        answer: entry.answer,
+      });
+      continue;
+    }
+    const logged = answers.find((answer) => answer.questionId === questionId);
+    const ask = askForQuestion(questionId, answers);
+    if (!ask) continue;
+    if (logged) {
+      browseItems.push({
+        questionId,
+        ask,
+        status: logged.skipped ? "skipped" : "answered",
+        answer: logged.values,
+      });
+      continue;
+    }
+    browseItems.push({ questionId, ask, status: "unanswered" });
+  }
 
   return (
     <div className="app-shell">
@@ -454,36 +610,33 @@ export function SourcingExperience() {
         {/* Left: define your need */}
         <section className="pane pane-left" aria-label="Define your need" hidden={!agentOpen}>
           <div className="agent-card">
+            <div className="agent-body" ref={scrollRef}>
             <div className="agent-header">
               <span className="agent-badge" aria-hidden="true">
                 <l-icon name="sparkles" fill />
               </span>
-              <div className="flex-1">
-                {/* Non-breaking space keeps "in" with "seconds" when it wraps. */}
-                <h4 className="mar-0">Build your perfect supplier shortlist in&nbsp;seconds</h4>
-                <p className="agent-welcome mar-0">{WELCOME}</p>
-              </div>
-              <div className="agent-aside">
-                {/* Goes green once the count is down to a presentable shortlist. */}
-                <span className="agent-count" data-near={liveMatch <= SHORTLIST_TARGET || undefined}>
-                  <strong>{liveMatch.toLocaleString()}</strong>
-                  Matched suppliers
-                </span>
-              </div>
-              <div
-                className="agent-progress"
-                role="progressbar"
-                aria-label="Narrowing toward your shortlist"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={Math.round(narrowing * 100)}
-              >
-                <span style={{ width: `${narrowing * 100}%` }} />
+              <div className="agent-header-copy flex-1">
+                <h4 className="mar-0">Intelligently refine your search</h4>
+                <p className="agent-searching mar-0">
+                  Answer questions to match with the right supplier for your need
+                </p>
               </div>
             </div>
-            <div className="agent-body" ref={scrollRef} data-floating-actions={activeAsk ? true : undefined}>
-            <div className="transcript">
-              {transcript.map((entry) => {
+            <div className="transcript" data-browse={browseAsks || undefined}>
+              {browseAsks
+                ? browseItems.map((item) => (
+                    <AskBlock
+                      key={item.questionId}
+                      ask={item.ask}
+                      status={item.status}
+                      answer={item.answer}
+                      picked={picked}
+                      onSelect={selectOption}
+                      collapsed
+                      onOpen={() => openAskFromBrowse(item.questionId, item.entryId)}
+                    />
+                  ))
+                : transcript.map((entry) => {
                 if (entry.kind === "user") {
                   return (
                     <div key={entry.id} className="chat-user">
@@ -567,7 +720,6 @@ export function SourcingExperience() {
                     ask={entry.ask}
                     status={entry.status}
                     answer={entry.answer}
-                    position={askPositions.get(entry.id) ?? 1}
                     picked={picked}
                     onSelect={selectOption}
                     onEdit={entry.status === "active" ? undefined : () => reopenAsk(entry.id)}
@@ -575,7 +727,7 @@ export function SourcingExperience() {
                 );
               })}
 
-              {thinking && (
+              {thinking && !browseAsks && (
                 <div className="thinking-row">
                   <ThinkingIndicator label="Matching suppliers" />
                   <small>Matching suppliers…</small>
@@ -609,12 +761,88 @@ export function SourcingExperience() {
                   </form>
                 )}
                 <div className="answer-actions">
-                  <button className="ghost-button" type="button" disabled={!canGoBack} onClick={goBack}>
-                    <l-icon name="arrow-left" /> Back
-                  </button>
-                  <button className="ghost-button" type="button" onClick={() => answerActive([], true)}>
-                    Skip <l-icon name="arrow-right" />
-                  </button>
+                  <div className="answer-actions-start">
+                    <button
+                      className="ghost-button answer-tool"
+                      type="button"
+                      title="Close chat"
+                      aria-label="Close chat"
+                      onClick={closeChat}
+                    >
+                      <svg
+                        className="panel-collapse-icon"
+                        viewBox="0 0 16 16"
+                        width="16"
+                        height="16"
+                        aria-hidden="true"
+                      >
+                        <rect
+                          x="1.25"
+                          y="1.25"
+                          width="13.5"
+                          height="13.5"
+                          rx="2.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.4"
+                        />
+                        <path
+                          d="M5.25 2.5v11"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M10.75 5.25 8.25 8l2.5 2.75"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="answer-actions-nav">
+                    <button
+                      className="ghost-button"
+                      type="button"
+                      disabled={!canGoBack || browseAsks}
+                      onClick={goBack}
+                    >
+                      <l-icon name="arrow-left" /> Back
+                    </button>
+                    <button
+                      className="ghost-button answer-tool"
+                      type="button"
+                      title="Reset your agent"
+                      aria-label="Reset your agent"
+                      onClick={reset}
+                    >
+                      <l-icon name="arrow-rotate-left" aria-hidden="true" />
+                    </button>
+                    <button
+                      className="ghost-button"
+                      type="button"
+                      disabled={browseAsks}
+                      onClick={() => answerActive([], true)}
+                    >
+                      Skip <l-icon name="arrow-right" />
+                    </button>
+                  </div>
+                  <div className="answer-actions-end">
+                    <button
+                      className="ghost-button answer-tool"
+                      type="button"
+                      title={browseAsks ? "Expand questions" : "Browse questions"}
+                      aria-label={browseAsks ? "Expand questions" : "Browse questions"}
+                      aria-pressed={browseAsks}
+                      onClick={() => setBrowseAsks((open) => !open)}
+                    >
+                      <l-icon name="list-ul" />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -637,7 +865,13 @@ export function SourcingExperience() {
 
         {/* Right: supplier results */}
         <section className="pane" aria-label="Supplier results">
-          <SupplierResults answers={answers} query={query} onRemoveAnswer={removeAnswer} />
+          <SupplierResults
+            answers={answers}
+            query={query}
+            onRemoveAnswer={removeAnswer}
+            onApplyFilterAnswer={applyFilterAnswer}
+            onClearMappedAnswers={() => removeAnswers(syncableQuestionIds())}
+          />
         </section>
 
         {agentOpen ? (
@@ -645,13 +879,52 @@ export function SourcingExperience() {
             type="button"
             className="exit-agent"
             title={OPT_OUT_HINT}
-            onClick={() => setAgentOpen(false)}
+            onClick={closeChat}
           >
             Exit Agent <l-icon name="circle-info" />
           </button>
         ) : (
-          <button type="button" className="agent-tab" onClick={() => setAgentOpen(true)}>
-            <l-icon name="sparkles" fill /> Sourcing Agent
+          <button
+            type="button"
+            className="agent-tab"
+            title="Open Agent"
+            aria-label="Open Agent"
+            onClick={() => setAgentOpen(true)}
+          >
+            <svg
+              className="panel-collapse-icon"
+              viewBox="0 0 16 16"
+              width="16"
+              height="16"
+              aria-hidden="true"
+            >
+              <rect
+                x="1.25"
+                y="1.25"
+                width="13.5"
+                height="13.5"
+                rx="2.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.4"
+              />
+              <path
+                d="M5.25 2.5v11"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
+              <path
+                d="M8.5 5.25 11 8l-2.5 2.75"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Open Agent
           </button>
         )}
       </main>

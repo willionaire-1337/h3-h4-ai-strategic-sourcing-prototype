@@ -21,8 +21,7 @@ h3,
 h4,
 h5,
 p,
-.ask-question,
-.agent-welcome {
+.ask-question {
   text-wrap: pretty;
 }
 
@@ -227,35 +226,35 @@ p,
   width: 100%;
 }
 
-/* Left pane: the agent card floats on a flat, very light blue rail. */
+/* Left pane: light blue wash. No outer padding — the footer goes edge to edge. */
 .pane-left {
   background: var(--l-color-blue-5, #f2f7fd);
-  padding: var(--l-space-4) var(--l-space-2) var(--l-space-4) var(--l-space-4);
-  overflow: visible;
+  padding: 0;
+  overflow: hidden;
 }
 
 .app-divider {
-  width: 10px;
+  /* Hairline only — no empty gutter between the left scrollbar and results. */
+  width: 2px;
   cursor: col-resize;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--l-radius-full);
+  align-items: stretch;
+  justify-content: stretch;
+  position: relative;
   touch-action: none;
-}
-
-.app-divider::before {
-  content: "";
-  width: 2px;
-  height: 100%;
-  border-radius: var(--l-radius-full);
   background: var(--l-color-border);
   transition: background 0.12s, width 0.12s;
 }
 
-.app-divider:hover::before,
-.app-divider[data-dragging]::before {
-  width: 4px;
+/* Widen the drag target without adding visible space. */
+.app-divider::before {
+  content: "";
+  position: absolute;
+  inset: 0 -5px;
+}
+
+.app-divider:hover,
+.app-divider[data-dragging] {
   background: var(--l-color-blue-100);
 }
 
@@ -298,8 +297,13 @@ p,
   z-index: 4;
   background: #fff;
   border-bottom: 1px solid var(--l-color-border);
-  /* Extra headroom up top; the title then sits close to the count below it. */
-  padding: calc(var(--l-space-5) + 4px) var(--l-space-5) var(--l-space-3);
+  padding: var(--l-space-5) var(--l-space-5) var(--l-space-3);
+  transition: box-shadow 0.15s ease;
+}
+
+/* Soft lift once the results list scrolls under the sticky header. */
+.results-header[data-scrolled] {
+  box-shadow: 0 2px 8px rgb(9 44 71 / 0.08);
 }
 
 /* Title and count stack on the left; the location field and filter button sit
@@ -660,8 +664,32 @@ p,
   font-size: 18px;
 }
 
-/* Logged answer in the results header: the buyer's selection, dismissible to
-   drop that filter. The question it answered is only in the accessible name. */
+/* Logged answer in the results header: category label over a dismissible chip. */
+.answer-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--l-space-2);
+  margin-top: var(--l-space-3);
+  padding-top: var(--l-space-3);
+  border-top: 1px solid var(--l-color-border);
+}
+
+.answer-pill-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.answer-pill-label {
+  font-size: 10px;
+  font-weight: var(--l-font-weight-semibold);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--l-color-darkblue-75);
+}
+
 .answer-pill {
   display: inline-flex;
   align-items: center;
@@ -791,33 +819,41 @@ p,
   background: var(--l-color-blue-10);
 }
 
-/* Tab on the left edge that brings the closed agent pane back. Its content
-   is stacked vertically so the tab stays a thin sliver against the results. */
+/* Pill reopen control — same 40px height as the footer collapse control. */
 .agent-tab {
   position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
+  top: auto;
+  bottom: var(--l-space-4);
+  left: var(--l-space-4);
+  transform: none;
   z-index: 6;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--l-space-2);
-  writing-mode: vertical-rl;
-  padding: var(--l-space-4) var(--l-space-2);
+  width: auto;
+  height: 40px;
+  padding: 0 var(--l-space-4);
   background: #fff;
   border: 1px solid var(--l-color-blue-100);
-  border-left: none;
-  border-radius: 0 var(--l-radius-1) var(--l-radius-1) 0;
+  border-radius: var(--l-radius-full);
   box-shadow: 0 4px 16px rgb(9 44 71 / 0.14);
   color: var(--l-color-blue-100);
   font-family: inherit;
   font-size: var(--l-font-size-smaller);
   font-weight: var(--l-font-weight-semibold);
   cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 .agent-tab:hover {
   background: var(--l-color-blue-5, #f2f8fd);
+  border-color: var(--l-color-blue-100);
+  color: var(--l-color-blue-100);
+}
+
+.app-main:has(.results-footer) .agent-tab {
+  bottom: calc(var(--l-space-4) + 60px);
 }
 
 /* Floating white CTA that dismisses the agent pane, anchored to the bottom
@@ -853,29 +889,23 @@ p,
   color: var(--l-color-blue-100);
 }
 
-/* Clear the tab so it never sits on top of the results it opens over. */
-.app-main[data-agent-closed] .pane {
-  margin-left: 44px;
-}
-
 .pane-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
-/* The agent is one floating card in the left rail: a tinted header, the run
-   scrolling in the middle, and the answer controls pinned to its floor. */
+/* Left rail shell: no outer card — the header floats above the transcript. */
 .agent-card {
   position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: #fff;
-  border: 1px solid var(--l-color-border);
-  border-radius: var(--l-radius-2, 12px);
-  box-shadow: 0 4px 20px rgb(9 44 71 / 0.08);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -883,51 +913,46 @@ p,
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--l-space-5);
+  /* Equal side inset so header + question cards sit centered in the wash. */
+  padding: var(--l-space-2) var(--l-space-4) var(--l-space-5);
+  background: transparent;
+  border-radius: 0;
 }
 
-/* Room for the floating Back / Skip controls to clear the last option row. */
-.agent-body[data-floating-actions] {
-  padding-bottom: 76px;
-}
-
-/* AI agent header — light blue wash with a sparkles badge and the live count. */
+/* Header card — same width as the question cards below; scrolls with them. */
 .agent-header {
   position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: var(--l-space-3);
   flex-shrink: 0;
-  background: linear-gradient(0deg, var(--l-color-blue-5, #f6f9ff), #fff);
-  /* Sits under the progress bar, which is positioned against the padding box. */
-  border-bottom: 1px solid var(--l-color-border);
-  padding: var(--l-space-4) var(--l-space-5) calc(var(--l-space-4) + 2px);
-}
-
-/* How far the run has come, drawn along the header's bottom edge. */
-.agent-progress {
-  position: absolute;
-  inset: auto 0 0;
-  height: 5px;
-  background: var(--l-color-blue-10);
-}
-
-.agent-progress span {
-  display: block;
-  height: 100%;
-  background: var(--l-color-blue-100);
-  transition: width 0.3s ease;
+  margin: 0 0 var(--l-space-3);
+  padding: var(--l-space-4) var(--l-space-5);
+  background: #fff;
+  border: 1px solid var(--l-color-border);
+  border-radius: 16px;
+  box-shadow: none;
 }
 
 .agent-header h4 {
   font-family: var(--app-font-display);
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1.25;
 }
 
-.agent-welcome {
-  margin-top: 4px;
-  font-size: 12px;
+.agent-header-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Supporting line under the agent header title. */
+.agent-searching {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--l-color-darkblue-75);
 }
 
@@ -1001,32 +1026,28 @@ p,
   font-size: 15px;
 }
 
-/* Small uppercase section label, e.g. "DEFINE YOUR NEED". */
-.kicker {
-  font-size: var(--l-font-size-smallest);
-  font-weight: var(--l-font-weight-bold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--l-color-darkblue-75);
-}
-
-.kicker-accent {
-  color: var(--l-color-blue-100);
-}
-
 /* Chat transcript — all conversation text at 14px. */
 .transcript {
   display: flex;
   flex-direction: column;
   gap: var(--l-space-4);
+  padding: 0;
   font-size: var(--l-font-size-smaller);
 }
 
-/* Completion card sits flush inside the agent card, no chrome of its own. */
+/* Browse mode is a stack of compact rows — tighten the gap so more fit. */
+.transcript[data-browse] {
+  gap: var(--l-space-2);
+}
+
+/* Completion and ask cards sit on the tinted agent body. */
 .transcript l-panel {
-  border: none;
+  display: block;
+  background: #fff;
+  border: 1px solid var(--l-color-border);
+  border-radius: 16px;
   box-shadow: none;
-  padding: 0;
+  padding: var(--l-space-5);
 }
 
 /* Tailoft styles `p` directly, so inheritance alone doesn't reach 14px. */
@@ -1048,39 +1069,92 @@ p,
   align-self: stretch;
 }
 
-/* Ask block — header row with a sparkle, a labeled section of stacked
-   option rows, and a "type below / skip / continue" footer. */
-/* One question in the run: step line, question, helper, options. */
+/* One question in the run: white card on the tinted body. */
 .ask-block {
   display: flex;
   flex-direction: column;
   gap: var(--l-space-3);
+  padding: var(--l-space-5);
+  background: #fff;
+  border: 1px solid var(--l-color-border);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgb(9 44 71 / 0.06);
 }
 
-/* A rule between questions, so the run reads as a series of discrete steps. */
-.transcript > .ask-block:not(:first-child) {
-  border-top: 1px solid var(--l-color-border);
-  padding-top: var(--l-space-4);
+.ask-block[aria-disabled="true"] {
+  opacity: 0.92;
 }
 
-/* Step line above the question — "QUESTION 1 OF 6 · STAMPING PROCESS". */
-.ask-kicker {
-  font-size: 12px;
+/* Compact browse row — question + status, opens on click. */
+.ask-collapsed {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--l-space-3);
+  width: 100%;
+  padding: var(--l-space-3) var(--l-space-4);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: border-color 0.1s, box-shadow 0.1s;
+}
+
+.ask-collapsed:hover {
+  border-color: var(--l-color-blue-100);
+  box-shadow: 0 2px 10px rgb(9 44 71 / 0.08);
+}
+
+.ask-collapsed-ask {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--l-font-size-smaller);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--l-color-darkblue-100);
+}
+
+.ask-collapsed-summary {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--l-space-1);
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--l-font-size-smallest);
   font-weight: var(--l-font-weight-semibold);
-  letter-spacing: 0.06em;
   color: var(--l-color-darkblue-75);
 }
 
+.ask-collapsed-summary[data-status="answered"] {
+  color: var(--l-color-blue-100);
+}
+
+.ask-collapsed-summary[data-status="active"] {
+  color: var(--l-color-blue-100);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.ask-collapsed-summary[data-status="unanswered"] {
+  color: var(--l-color-darkblue-50);
+  font-weight: var(--l-font-weight-regular);
+}
+
 .ask-question {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1.3;
   color: var(--l-color-darkblue-100);
 }
 
 .ask-block .ask-help {
-  margin-top: calc(var(--l-space-3) * -1 + 2px);
+  margin-top: calc(var(--l-space-3) * -1 + 4px);
   color: var(--l-color-darkblue-75);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 /* A settled question carries a quiet way back into it, parked on the right. */
@@ -1120,22 +1194,41 @@ p,
   align-items: center;
   justify-content: center;
   gap: var(--l-space-2);
+  height: 36px;
   /* Symmetrical room for the edit control, so the answer stays centred. */
-  padding: 10px 44px;
-  border: 1px solid var(--l-color-green-50);
+  padding: 0 44px;
+  border: 1px solid var(--l-color-blue-25, var(--l-color-blue-50, #b7d0f5));
   border-radius: 8px;
-  background: var(--l-color-green-5, #e7f8f3);
-  color: var(--app-color-green-ink);
+  background: var(--l-color-blue-5, #f6f9ff);
+  color: var(--l-color-blue-100);
   font-weight: var(--l-font-weight-semibold);
+  box-sizing: border-box;
 }
 
-/* Two columns of options, collapsing to one when the pane gets narrow. The
-   track minimum is half the row, so a third column can never fit; once half a
+/* Skipped / "I don't know" — same bar shape as answered, muted gray. */
+.ask-skipped {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--l-space-2);
+  height: 36px;
+  padding: 0 44px;
+  border: 1px solid var(--l-color-border);
+  border-radius: 8px;
+  background: var(--l-color-gray-6, #f2f2f2);
+  color: var(--l-color-darkblue-75);
+  font-style: italic;
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+/* Two equal columns of options, collapsing to one when the pane gets
+   narrow. Track min is half the row (so a third never fits); once half a
    row drops below the readable minimum, only one track fits. Keyed off the
    pane's own width rather than the viewport, since the split is resizable. */
 .option-rows {
-  /* Readable width for one option, never wider than the row itself. */
-  --option-min-width: min(100%, 240px);
+  /* Sized for the 500px default pane — two even columns with card padding. */
+  --option-min-width: min(100%, 160px);
   display: grid;
   grid-template-columns: repeat(
     auto-fit,
@@ -1154,28 +1247,37 @@ p,
   align-items: center;
   gap: var(--l-space-3);
   width: 100%;
+  min-height: 36px;
   text-align: left;
   background: #fff;
   border: 1px solid var(--l-color-border);
   border-radius: 8px;
-  padding: 10px 14px;
+  /* Same inset as a centered single line in a 36px row — used for 2+ lines too. */
+  padding: 8px 14px;
   font-family: inherit;
   font-size: var(--l-font-size-smaller);
-  font-weight: var(--l-font-weight-semibold);
+  font-weight: 500;
+  line-height: 1.35;
   color: var(--l-color-darkblue-100);
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s;
+  box-sizing: border-box;
 }
 
-/* Answering is progress, so picking an option reads green rather than blue. */
+.option-row-label {
+  min-width: 0;
+  flex: 1;
+}
+
+/* Selected / hovered options read blue. */
 .option-row:hover {
-  border-color: var(--l-color-green-125);
+  border-color: var(--l-color-blue-100);
 }
 
 .option-row[aria-pressed="true"] {
-  border-color: var(--l-color-green-125);
-  background: var(--l-color-green-5, #e7f8f3);
-  color: var(--app-color-green-ink);
+  border-color: var(--l-color-blue-100);
+  background: var(--l-color-blue-5, #f6f9ff);
+  color: var(--l-color-blue-100);
 }
 
 .option-row[disabled] {
@@ -1206,8 +1308,8 @@ p,
 
 .option-row[aria-pressed="true"] .row-indicator,
 .row-indicator[data-checked] {
-  background: var(--l-color-green-125);
-  border-color: var(--l-color-green-125);
+  background: var(--l-color-blue-100);
+  border-color: var(--l-color-blue-100);
 }
 
 .option-row.row-more {
@@ -1240,6 +1342,9 @@ p,
 .location-entry button[kind="primary"] {
   height: 44px;
   flex-shrink: 0;
+  /* Tailoft's default kind button is 1rem (16px); match the field at 14px. */
+  font-size: var(--l-font-size-smaller);
+  line-height: var(--l-font-lineheight-3, 1.25);
 }
 
 /* Autocomplete above the input: the question card sits at the foot of the
@@ -1298,20 +1403,17 @@ p,
    sitting in a bar of their own — answering is done in the option rows, so
    nothing here should read as the way forward. */
 .agent-footer {
-  position: absolute;
-  inset: auto 0 0;
+  flex-shrink: 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--l-space-2);
-  padding: var(--l-space-4) var(--l-space-5);
-  /* The transcript keeps scrolling under the gaps between the controls. */
-  pointer-events: none;
-}
-
-.agent-footer > * {
-  pointer-events: auto;
+  /* Full-bleed bar: flush to pane edges; 16px vertical only for the controls. */
+  padding: 16px var(--l-space-5);
+  margin: 0;
+  background: #fff;
+  border-top: 1px solid var(--l-color-border);
 }
 
 .agent-footer .composer {
@@ -1319,25 +1421,79 @@ p,
 }
 
 .answer-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
+  width: 100%;
   gap: var(--l-space-2);
 }
 
-/* Floating pills: legible over whatever they happen to sit above. */
+.answer-actions-start {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  justify-self: start;
+}
+
+.answer-actions-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  grid-column: 2;
+}
+
+.answer-actions-end {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  justify-self: end;
+  grid-column: 3;
+}
+
+.panel-collapse-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Icon-only tools parked on the far left. */
+.answer-actions .answer-tool {
+  width: 40px;
+  padding: 0;
+  justify-content: center;
+}
+
+.answer-actions .answer-tool[aria-pressed="true"] {
+  border-color: var(--l-color-blue-100);
+  background: var(--l-color-blue-10);
+  color: var(--l-color-blue-100);
+}
+
+/* Footer controls sit on white — no floating shadow. */
 .answer-actions .ghost-button {
   height: 40px;
   padding: 0 var(--l-space-4);
   border-radius: var(--l-radius-full);
   border-color: var(--l-color-border);
   background: #fff;
-  box-shadow: 0 4px 14px rgb(9 44 71 / 0.16);
+  box-shadow: none;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.answer-actions .ghost-button:hover:not(:disabled) {
+  border-color: var(--l-color-blue-100);
+  background: var(--l-color-blue-5, #f6f9ff);
+  color: var(--l-color-blue-100);
 }
 
 .answer-actions .ghost-button:disabled {
-  background: rgb(255 255 255 / 0.7);
+  background: #fff;
   box-shadow: none;
+}
+
+.answer-actions .answer-tool[aria-pressed="true"]:hover:not(:disabled) {
+  border-color: var(--l-color-blue-100);
+  background: var(--l-color-blue-10);
+  color: var(--l-color-blue-100);
 }
 
 /* Quiet tertiary: a step backwards shouldn't compete with the way forward. */
@@ -1748,7 +1904,7 @@ p,
   padding: 0 var(--l-space-5);
 }
 
-/* Waiting on the next question: a calm blue block where that question lands. */
+/* Waiting on the next question: a calm card where that question lands. */
 .thinking-row {
   display: flex;
   flex-direction: column;
@@ -1756,8 +1912,9 @@ p,
   justify-content: center;
   gap: var(--l-space-2);
   padding: var(--l-space-5);
-  border-radius: var(--l-radius-1);
-  background: var(--l-color-blue-5, #f6f9ff);
+  border: 1px solid var(--l-color-border);
+  border-radius: 16px;
+  background: #fff;
   color: var(--l-color-darkblue-75);
   text-align: center;
 }
