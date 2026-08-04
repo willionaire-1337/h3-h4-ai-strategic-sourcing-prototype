@@ -415,13 +415,6 @@ export function SourcingExperience() {
     Math.log(CATEGORY_SUPPLIER_COUNT / Math.max(liveMatch, SHORTLIST_TARGET)) /
       Math.log(CATEGORY_SUPPLIER_COUNT / SHORTLIST_TARGET),
   );
-  // Numbered by the order they were actually asked, so the run reads 1, 2, 3
-  // even when the flow drops questions the supplier data can't narrow.
-  const askPositions = new Map<number, number>();
-  for (const entry of transcript) {
-    if (entry.kind === "ask") askPositions.set(entry.id, askPositions.size + 1);
-  }
-
   /** Picking an option answers the question outright and moves the run on. */
   const selectOption = (value: string) => {
     if (thinking) return;
@@ -567,7 +560,6 @@ export function SourcingExperience() {
                     ask={entry.ask}
                     status={entry.status}
                     answer={entry.answer}
-                    position={askPositions.get(entry.id) ?? 1}
                     picked={picked}
                     onSelect={selectOption}
                     onEdit={entry.status === "active" ? undefined : () => reopenAsk(entry.id)}

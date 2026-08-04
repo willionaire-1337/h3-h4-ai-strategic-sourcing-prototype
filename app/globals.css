@@ -1001,19 +1001,6 @@ p,
   font-size: 15px;
 }
 
-/* Small uppercase section label, e.g. "DEFINE YOUR NEED". */
-.kicker {
-  font-size: var(--l-font-size-smallest);
-  font-weight: var(--l-font-weight-bold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--l-color-darkblue-75);
-}
-
-.kicker-accent {
-  color: var(--l-color-blue-100);
-}
-
 /* Chat transcript — all conversation text at 14px. */
 .transcript {
   display: flex;
@@ -1061,14 +1048,6 @@ p,
 .transcript > .ask-block:not(:first-child) {
   border-top: 1px solid var(--l-color-border);
   padding-top: var(--l-space-4);
-}
-
-/* Step line above the question — "QUESTION 1 OF 6 · STAMPING PROCESS". */
-.ask-kicker {
-  font-size: 12px;
-  font-weight: var(--l-font-weight-semibold);
-  letter-spacing: 0.06em;
-  color: var(--l-color-darkblue-75);
 }
 
 .ask-question {
