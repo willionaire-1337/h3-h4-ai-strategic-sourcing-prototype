@@ -682,25 +682,32 @@ p,
   align-items: center;
   gap: var(--l-space-2);
   padding: 6px 10px;
-  border: none;
   border-radius: var(--l-radius-1);
   background: var(--l-color-blue-10);
   color: var(--l-color-blue-100);
-  font-family: inherit;
   font-size: 12px;
   font-weight: var(--l-font-weight-semibold);
+}
+
+/* Only the X removes the answer; the pill body is inert. A hairline rule
+   sets the remove affordance apart from the label. */
+.answer-pill-remove {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  border-left: 1px solid var(--l-color-blue-25);
+  border-radius: 0;
+  padding: 2px 0 2px var(--l-space-2);
+  margin: -2px 0;
+  background: none;
+  color: inherit;
+  font-size: 11px;
+  line-height: 1;
   cursor: pointer;
 }
 
-.answer-pill:hover {
-  background: var(--l-color-blue-25);
-}
-
-/* Hairline rule setting the remove affordance apart from the label. */
-.answer-pill l-icon {
-  border-left: 1px solid var(--l-color-blue-25);
-  padding-left: var(--l-space-2);
-  font-size: 11px;
+.answer-pill-remove:hover {
+  color: var(--l-color-darkblue-100);
 }
 
 /* Plain icon-only button (close X, composer +, …). */

@@ -301,15 +301,17 @@ export function SupplierResults({
             {facets.map((facet) => (
               <div className="answer-pill-stack" key={facet.id}>
                 <span className="answer-pill-label">{facet.label}</span>
-                <button
-                  type="button"
-                  className="answer-pill"
-                  aria-label={`Remove ${facet.title}: ${facet.value}`}
-                  onClick={() => onRemoveAnswer(facet.id)}
-                >
+                <span className="answer-pill">
                   {facet.value}
-                  <l-icon name="xmark" />
-                </button>
+                  <button
+                    type="button"
+                    className="answer-pill-remove"
+                    aria-label={`Remove ${facet.title}: ${facet.value}`}
+                    onClick={() => onRemoveAnswer(facet.id)}
+                  >
+                    <l-icon name="xmark" aria-hidden="true" />
+                  </button>
+                </span>
               </div>
             ))}
           </div>
