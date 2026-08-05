@@ -26,7 +26,7 @@ import {
   type NextAsk,
 } from "@/lib/simulation";
 import { syncableQuestionIds } from "@/lib/filter-sync";
-import { CATEGORY_LABEL } from "@/lib/suppliers";
+import { CATEGORY_LABEL, CATEGORY_SUPPLIER_COUNT } from "@/lib/suppliers";
 
 const OPT_OUT_HINT =
   "Opt out of the Thomas Agent experience and go back to Thomas Classic sourcing";
@@ -93,6 +93,10 @@ export function SourcingExperience() {
   const [thinking, setThinking] = useState(false);
   /** Whether the agent pane is open. Closing it hands the width to the rail. */
   const [agentOpen, setAgentOpen] = useState(true);
+  /* Phones lead with the results; the agent waits in the bottom tab. */
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 640px)").matches) setAgentOpen(false);
+  }, []);
   /**
    * Compact accordion of every ask so far — answered, skipped, or still open —
    * so the buyer can scan the run and jump back into a question.
@@ -143,6 +147,48 @@ export function SourcingExperience() {
   );
 
   const endDrag = useCallback(() => setDragging(false), []);
+
+  /* Mobile bottom sheet: swiping down from the grip at the top of the chat
+     follows the finger and dismisses the sheet to reveal the results. The
+     transform is written directly to the pane so tracking stays smooth. */
+  const sheetRef = useRef<HTMLElement>(null);
+  const sheetDrag = useRef<{ startY: number; delta: number } | null>(null);
+
+  const onSheetGripDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    sheetDrag.current = { startY: event.clientY, delta: 0 };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    if (sheetRef.current) sheetRef.current.style.transition = "none";
+  }, []);
+
+  const onSheetGripMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = sheetDrag.current;
+    const pane = sheetRef.current;
+    if (!drag || !pane) return;
+    drag.delta = Math.max(0, event.clientY - drag.startY);
+    pane.style.transform = drag.delta > 0 ? `translateY(${drag.delta}px)` : "";
+  }, []);
+
+  const onSheetGripUp = useCallback(() => {
+    const drag = sheetDrag.current;
+    const pane = sheetRef.current;
+    sheetDrag.current = null;
+    if (!drag || !pane) return;
+    pane.style.transition = "transform 0.2s ease";
+    if (drag.delta > 110) {
+      // Past the dismiss threshold: finish the slide, then actually close.
+      pane.style.transform = "translateY(100%)";
+      later(200, () => {
+        setAgentOpen(false);
+        pane.style.transform = "";
+        pane.style.transition = "";
+      });
+    } else {
+      pane.style.transform = "";
+      later(220, () => {
+        pane.style.transition = "";
+      });
+    }
+  }, [later]);
 
   /** Queue the next question, or wrap up when nothing is left worth asking. */
   const advance = useCallback(
@@ -608,7 +654,23 @@ export function SourcingExperience() {
         style={{ gridTemplateColumns: agentOpen ? `${leftWidth}px auto 1fr` : "1fr" }}
       >
         {/* Left: define your need */}
-        <section className="pane pane-left" aria-label="Define your need" hidden={!agentOpen}>
+        <section
+          className="pane pane-left"
+          aria-label="Define your need"
+          hidden={!agentOpen}
+          ref={sheetRef}
+        >
+          {/* Mobile-only grab handle: swipe down to reveal the results. */}
+          <div
+            className="sheet-grip"
+            aria-hidden="true"
+            onPointerDown={onSheetGripDown}
+            onPointerMove={onSheetGripMove}
+            onPointerUp={onSheetGripUp}
+            onPointerCancel={onSheetGripUp}
+          >
+            <span className="sheet-grip-bar" />
+          </div>
           <div className="agent-card">
             <div className="agent-body" ref={scrollRef}>
             <div className="agent-header">
@@ -760,6 +822,15 @@ export function SourcingExperience() {
                     </button>
                   </form>
                 )}
+                {/* Phone sheet: the results header is hidden behind the sheet,
+                    so the live match count rides above the controls. */}
+                <p className="footer-match-note mar-0">
+                  <span className="txt-blue-100 font-semi">
+                    {simulatedMatchCount(answers).toLocaleString()}
+                  </span>{" "}
+                  suppliers of {CATEGORY_SUPPLIER_COUNT.toLocaleString()} verified suppliers match
+                  your query.
+                </p>
                 <div className="answer-actions">
                   <div className="answer-actions-start">
                     <button

@@ -277,7 +277,7 @@ export function SupplierResults({
       <div className="results-header" data-scrolled={scrolled || undefined}>
         <div className="results-meta">
           <div className="results-headline">
-            <h3 className="mar-0">Suppliers that match your need</h3>
+            <h3 className="mar-0">Suppliers that match your spec</h3>
             <p className="mar-0 txt-smaller txt-darkblue-75">
               <span className="txt-blue-100 font-semi">{matchTotal.toLocaleString()}</span> suppliers
               of {CATEGORY_SUPPLIER_COUNT.toLocaleString()} verified suppliers match your query.
@@ -285,9 +285,14 @@ export function SupplierResults({
           </div>
           {/* Location left the header: it's asked as question 3 in the agent
               flow now, and remains available in the All Filters drawer. */}
-          <button type="button" className="all-filters" onClick={() => setFiltersOpen(true)}>
+          <button
+            type="button"
+            className="all-filters"
+            aria-label="All Filters"
+            onClick={() => setFiltersOpen(true)}
+          >
             <l-icon name="sliders" aria-hidden="true" />
-            All Filters
+            <span className="all-filters-label">All Filters</span>
             {filterCount > 0 && <span className="all-filters-count">{filterCount}</span>}
           </button>
         </div>
