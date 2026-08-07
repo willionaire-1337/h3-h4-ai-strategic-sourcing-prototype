@@ -17,6 +17,8 @@ type AskBlockProps = {
   /** Selection for the active ask, restored when a question is reopened. */
   picked: string[];
   onSelect: (value: string) => void;
+  /** Settles a multi-select question with everything picked so far. */
+  onSubmit?: () => void;
   /** Reopens a settled question so the buyer can change what they picked. */
   onEdit?: () => void;
   /**
@@ -36,7 +38,12 @@ type AskBlockProps = {
  * position in the scroller, since the transcript is pinned to the bottom and
  * the active question is what has to fit.
  */
-function useFittedOptionCount(gridRef: React.RefObject<HTMLDivElement | null>, total: number) {
+function useFittedOptionCount(
+  gridRef: React.RefObject<HTMLDivElement | null>,
+  total: number,
+  /** Height kept free below the grid — the multi-select log button. */
+  reserve = 0,
+) {
   const [fitted, setFitted] = useState(ASSUMED_VISIBLE);
 
   useLayoutEffect(() => {
@@ -63,7 +70,8 @@ function useFittedOptionCount(gridRef: React.RefObject<HTMLDivElement | null>, t
         scroller.clientHeight -
         parseFloat(scrollerStyles.paddingTop) -
         parseFloat(scrollerStyles.paddingBottom) -
-        header;
+        header -
+        reserve;
 
       const rows = Math.min(MAX_OPTION_ROWS, Math.max(1, Math.floor((room + gap) / (rowHeight + gap))));
       // Everything fits, or one row goes to "+N more options".
@@ -75,7 +83,7 @@ function useFittedOptionCount(gridRef: React.RefObject<HTMLDivElement | null>, t
     observer.observe(scroller);
     observer.observe(grid);
     return () => observer.disconnect();
-  }, [gridRef, total]);
+  }, [gridRef, total, reserve]);
 
   return fitted;
 }
@@ -118,6 +126,7 @@ export function AskBlock({
   answer,
   picked,
   onSelect,
+  onSubmit,
   onEdit,
   collapsed = false,
   onOpen,
@@ -145,7 +154,8 @@ export function AskBlock({
 
   const active = status === "active";
   const gridRef = useRef<HTMLDivElement>(null);
-  const fitted = useFittedOptionCount(gridRef, active ? options.length : 0);
+  // Multi-select cards keep a row free below the grid for the log button.
+  const fitted = useFittedOptionCount(gridRef, active ? options.length : 0, question.multi ? 56 : 0);
 
   // Keep "I don't know" on-screen even when other options collapse behind +more.
   const visible = (() => {
@@ -321,6 +331,17 @@ export function AskBlock({
         ) : (
           <small className="txt-darkblue-50">Free-form answer — skip to move on.</small>
         ))}
+
+      {/* Multi-select questions settle from an explicit log button — picking
+          rows only toggles them, so the buyer can choose more than one. */}
+      {active && question.multi && options.length > 0 && (
+        <div className="ask-submit">
+          <small className="txt-darkblue-50">Select all that apply</small>
+          <button kind="primary" type="button" disabled={picked.length === 0} onClick={onSubmit}>
+            Submit
+          </button>
+        </div>
+      )}
     </div>
   );
 }
