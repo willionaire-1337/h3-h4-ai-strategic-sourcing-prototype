@@ -587,7 +587,10 @@ export function SourcingExperience() {
   const hasActiveAsk = activeAsk != null;
   const started = transcript.some((entry) => entry.kind === "user");
   const canGoBack = transcript.some((entry) => entry.kind === "ask" && entry.status !== "active");
-  /** Picking an option answers the question outright and moves the run on. */
+  /**
+   * Picking an option answers a single-select question outright. Multi-select
+   * questions collect picks instead and settle from the card's log button.
+   */
   const selectOption = (value: string) => {
     if (thinking) return;
     // "I don't know" is an explicit opt-out — same as Skip for matching.
@@ -595,7 +598,19 @@ export function SourcingExperience() {
       answerActive([value], true);
       return;
     }
+    if (activeAsk?.ask.question.multi) {
+      setPicked((current) =>
+        current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
+      );
+      return;
+    }
     answerActive([value], false);
+  };
+
+  /** Settles a multi-select question with everything picked so far. */
+  const submitPicked = () => {
+    if (thinking || picked.length === 0) return;
+    answerActive(picked, false);
   };
 
   /** Full questionnaire for browse mode — answered, skipped, active, or not yet asked. */
@@ -694,6 +709,7 @@ export function SourcingExperience() {
                       answer={item.answer}
                       picked={picked}
                       onSelect={selectOption}
+                      onSubmit={submitPicked}
                       collapsed
                       onOpen={() => openAskFromBrowse(item.questionId, item.entryId)}
                     />
@@ -745,20 +761,19 @@ export function SourcingExperience() {
                           </span>
                         </span>
                         <h3 className="done-title mar-0">
-                          {entry.routed
-                            ? "This need is quoted by Deep Drawing Services"
-                            : entry.stalled
-                              ? "This is the best set we can give you"
-                              : `Based on your inputs we've matched you to ${entry.shortlist ?? 0} suppliers.`}
+                          {entry.routed ? (
+                            "This need is quoted by Deep Drawing Services"
+                          ) : (
+                            <>
+                              Based on your inputs we&apos;ve matched you to{" "}
+                              <span className="txt-blue-100">{entry.shortlist ?? 0}</span> suppliers.
+                            </>
+                          )}
                         </h3>
                         <p className="mar-0 done-copy">
                           {entry.routed
                             ? entry.text
-                            : `${
-                                entry.stalled
-                                  ? `Nothing left to ask would materially narrow this category below ${(entry.matched ?? 0).toLocaleString()} suppliers. `
-                                  : ""
-                              }You can restart your search any time or close the agent below.${
+                            : `You can restart your search any time or close the agent below.${
                                 FREE_TEXT_ENABLED
                                   ? " You can also keep typing details like certifications, industry, or supplier location."
                                   : ""
@@ -784,6 +799,7 @@ export function SourcingExperience() {
                     answer={entry.answer}
                     picked={picked}
                     onSelect={selectOption}
+                    onSubmit={submitPicked}
                     onEdit={entry.status === "active" ? undefined : () => reopenAsk(entry.id)}
                   />
                 );

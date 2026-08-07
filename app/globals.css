@@ -681,7 +681,7 @@ p,
   display: inline-flex;
   align-items: center;
   gap: var(--l-space-2);
-  padding: 6px 10px;
+  padding: 3px 8px;
   border-radius: var(--l-radius-1);
   background: var(--l-color-blue-10);
   color: var(--l-color-blue-100);
@@ -1188,9 +1188,10 @@ p,
   align-items: center;
   justify-content: center;
   gap: var(--l-space-2);
-  height: 36px;
+  /* Grows for answers that wrap to a second line. */
+  min-height: 36px;
   /* Symmetrical room for the edit control, so the answer stays centred. */
-  padding: 0 44px;
+  padding: 6px 44px;
   border: 1px solid var(--l-color-blue-25, var(--l-color-blue-50, #b7d0f5));
   border-radius: 8px;
   background: var(--l-color-blue-5, #f6f9ff);
@@ -1234,6 +1235,14 @@ p,
 /* The "+N more options" affordance always spans the full row. */
 .option-rows .row-more {
   grid-column: 1 / -1;
+}
+
+/* Multi-select questions settle from a log button under the option rows. */
+.ask-submit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--l-space-3);
 }
 
 .option-row {
