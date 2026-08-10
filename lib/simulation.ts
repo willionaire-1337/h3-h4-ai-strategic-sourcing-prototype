@@ -428,34 +428,32 @@ export function askForQuestion(questionId: string, _answers: LoggedAnswer[] = []
 }
 
 /**
- * The order the run works through, set by the sourcing team's ask sequence
- * rather than by raw importance score. There is no fixed question count: an
- * entry is only ever asked while it can still earn its place, so how many
- * questions a run takes depends on the answers. Questions outside the
- * sequence are never put to the buyer — they're only logged when the buyer's
- * own words cover them.
+ * The order the run works through: the questionnaire's own rank order,
+ * Q1 through Q14. There is no fixed question count: an entry is only ever
+ * asked while it can still earn its place, so how many questions a run
+ * takes depends on the answers. Questions outside the sequence are never
+ * put to the buyer — they're only logged when the buyer's own words cover
+ * them.
  *
- * "delivery" (Q7) holds its place in the order but is never asked: a need-by
- * date describes the order rather than the supplier, so it can't narrow the
- * set (see {@link NON_FILTERING_QUESTIONS}). Supplier location is asked
- * third, per the requirements — the buyer types a ZIP code, city, or state,
- * or selects National.
+ * "delivery" (Q7) holds its rank slot but is never asked: a need-by date
+ * describes the order rather than the supplier, so it can't narrow the
+ * set (see {@link NON_FILTERING_QUESTIONS}).
  */
 export const ASK_SEQUENCE = [
-  "material",
-  "tooling",
-  "loc",
-  "qty",
-  "tol",
-  "stock",
-  "features",
-  "process",
-  "size",
-  "app",
-  "cert",
-  "part",
-  "delivery",
-  "diverse",
+  "process", // Q1
+  "material", // Q2
+  "stock", // Q3
+  "qty", // Q4
+  "size", // Q5
+  "tooling", // Q6
+  "delivery", // Q7
+  "tol", // Q8
+  "loc", // Q9
+  "features", // Q10
+  "part", // Q11
+  "app", // Q12
+  "cert", // Q13
+  "diverse", // Q14
 ]
 
 /** Every question the browse list can surface, in ask order. */
