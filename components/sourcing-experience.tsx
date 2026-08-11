@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AskBlock } from "@/components/ask-block";
+import { DeepDrawGate } from "@/components/deep-draw-gate";
 import { RegisterGate } from "@/components/register-gate";
 import { SiteNavbar } from "@/components/site-navbar";
 import { SupplierResults } from "@/components/supplier-results";
@@ -104,6 +105,8 @@ export function SourcingExperience() {
   const [browseAsks, setBrowseAsks] = useState(false);
   /** Registration gate over the whole page, up until the buyer signs in. */
   const [gateOpen, setGateOpen] = useState(true);
+  /** Deep Drawing hand-off confirm, opened from the process question. */
+  const [deepDrawGateOpen, setDeepDrawGateOpen] = useState(false);
   /** Left pane width in px; dragged via the divider. */
   const [leftWidth, setLeftWidth] = useState(550);
   const [dragging, setDragging] = useState(false);
@@ -598,7 +601,17 @@ export function SourcingExperience() {
       answerActive([value], true);
       return;
     }
-    if (activeAsk?.ask.question.multi) {
+    // Deep Drawing on the process question is served by the standard Thomas
+    // search, not the agent: confirm the hand-off instead of logging it.
+    const question = activeAsk?.ask.question;
+    if (
+      question?.id === "process" &&
+      question.options.some((option) => option.value === value && option.routesToDeepDrawing)
+    ) {
+      setDeepDrawGateOpen(true);
+      return;
+    }
+    if (question?.multi) {
       setPicked((current) =>
         current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
       );
@@ -648,6 +661,14 @@ export function SourcingExperience() {
   return (
     <div className="app-shell">
       <RegisterGate open={gateOpen} onDismiss={() => setGateOpen(false)} />
+      <DeepDrawGate
+        open={deepDrawGateOpen}
+        onConfirm={() => {
+          setDeepDrawGateOpen(false);
+          closeChat();
+        }}
+        onRevise={() => setDeepDrawGateOpen(false)}
+      />
       <SiteNavbar
         query={query}
         onSearch={(text) => {

@@ -102,6 +102,21 @@ p,
   font-size: var(--l-font-size-small);
 }
 
+/* Deep Drawing hand-off: a confirm dialog, so the title sits smaller than
+   the registration gate's hero size. */
+.deep-draw-title {
+  font-size: 24px;
+  font-weight: var(--l-font-weight-semibold);
+}
+
+.deep-draw-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--l-space-3);
+  margin-top: var(--l-space-2);
+}
+
 .gate-foot {
   font-size: var(--l-font-size-smaller);
   color: var(--l-color-darkblue-100);
