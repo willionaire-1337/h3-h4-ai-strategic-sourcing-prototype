@@ -666,14 +666,21 @@ p,
   font-size: 18px;
 }
 
-/* Logged answer in the results header: category label over a dismissible chip. */
+/* Logged answer in the results header: category label over a dismissible chip.
+   The row never wraps — extra answers scroll sideways on one line. */
 .answer-pill-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: var(--l-space-2);
   margin-top: var(--l-space-3);
   padding-top: var(--l-space-3);
   border-top: 1px solid var(--l-color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.answer-pill-row::-webkit-scrollbar {
+  display: none;
 }
 
 .answer-pill-stack {
@@ -681,6 +688,7 @@ p,
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .answer-pill-label {
@@ -696,6 +704,7 @@ p,
   display: inline-flex;
   align-items: center;
   gap: var(--l-space-2);
+  white-space: nowrap;
   padding: 3px 8px;
   border-radius: var(--l-radius-1);
   background: var(--l-color-blue-10);
@@ -1562,6 +1571,59 @@ p,
 /* Rows that aren't cards (empty state, show-more) still read as white. */
 .results-list > div {
   background: #fff;
+}
+
+/* Pagination at the foot of the supplier list. */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--l-space-2);
+  padding: var(--l-space-4) var(--l-space-5);
+}
+
+.pagination button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--l-space-2);
+  height: 36px;
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-1);
+  background: #fff;
+  color: var(--l-color-darkblue-100);
+  font-family: inherit;
+  font-size: var(--l-font-size-smaller);
+  font-weight: var(--l-font-weight-semibold);
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s, color 0.1s;
+}
+
+.pagination .page-nav {
+  padding: 0 var(--l-space-4);
+}
+
+.pagination .page-number {
+  min-width: 36px;
+  padding: 0 var(--l-space-2);
+}
+
+.pagination button:hover:not(:disabled):not([aria-current="page"]) {
+  border-color: var(--l-color-blue-100);
+  color: var(--l-color-blue-100);
+}
+
+.pagination .page-number[aria-current="page"] {
+  border-color: var(--l-color-blue-100);
+  background: var(--l-color-blue-100);
+  color: #fff;
+  cursor: default;
+}
+
+.pagination button:disabled {
+  color: var(--l-color-darkblue-25, #b9c2c9);
+  cursor: default;
 }
 
 /* Marks where exact matches end and the backfilled near matches begin, so a
@@ -2443,25 +2505,11 @@ p,
     display: none;
   }
 
-  /* Applied answers run sideways on one line, scrolling edge to edge. */
+  /* The one-line scroll comes from the base styles; here the row just runs
+     edge to edge under the phone header's tighter padding. */
   .answer-pill-row {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
     margin: var(--l-space-3) calc(var(--l-space-4) * -1) 0;
     padding: var(--l-space-3) var(--l-space-4) 0;
-  }
-
-  .answer-pill-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  .answer-pill-stack {
-    flex-shrink: 0;
-  }
-
-  .answer-pill {
-    white-space: nowrap;
   }
 
   .results-list[data-layout="grid"] {

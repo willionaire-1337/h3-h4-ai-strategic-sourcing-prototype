@@ -67,7 +67,7 @@ export function SupplierResults({
   onApplyFilterAnswer,
   onClearMappedAnswers,
 }: SupplierResultsProps) {
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [page, setPage] = useState(1);
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
   /** Draft for the drawer location field while typing; commits into answers. */
@@ -146,6 +146,21 @@ export function SupplierResults({
   }, [answers, matchTotal, query, verifiedOnly, localFacetPicks]);
 
   const results = useMemo(() => [...exact, ...near], [exact, near]);
+
+  // A new answer or filter reshuffles the list, so the buyer starts back on
+  // page one rather than stranded past the end of a shorter set.
+  useEffect(() => {
+    setPage(1);
+  }, [results]);
+
+  const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+
+  const goToPage = (next: number) => {
+    setPage(Math.min(pageCount, Math.max(1, next)));
+    scrollRef.current?.scrollTo({ top: 0 });
+  };
 
   // Facet options come from the suppliers this category can return, so the rail
   // never offers a filter that would empty the list on its own.
@@ -320,7 +335,7 @@ export function SupplierResults({
 
       <div className="pane-scroll" ref={scrollRef}>
         <div className="results-list">
-          {results.slice(0, visibleCount).map((supplier, index) => (
+          {results.slice(pageStart, pageStart + PAGE_SIZE).map((supplier, index) => (
             <Fragment key={supplier.id}>
               {/* The floor rule's divider. Backfill also pads the rail when the
                   104-profile slice runs dry while the modeled category count is
@@ -328,7 +343,7 @@ export function SupplierResults({
                   slice doesn't hold, so only a genuine floor-rule backfill —
                   the set itself under the floor — is called out, labeled with
                   the answer that was relaxed to refill it. */}
-              {backfilled && matchTotal < MATCH_FLOOR && index === exact.length && (
+              {backfilled && matchTotal < MATCH_FLOOR && pageStart + index === exact.length && (
                 <div className="results-row-full near-match-note">
                   <l-icon name="circle-info" aria-hidden="true" />
                   <p className="mar-0">
@@ -356,12 +371,37 @@ export function SupplierResults({
               </p>
             </l-panel>
           )}
-          {results.length > visibleCount && (
-            <div className="results-row-full flex justify-content-center pad-4">
-              <button kind="neutral" scale="small" onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}>
-                Show more ({results.length - visibleCount} remaining)
+          {pageCount > 1 && (
+            <nav className="results-row-full pagination" aria-label="Results pages">
+              <button
+                type="button"
+                className="page-nav"
+                disabled={currentPage === 1}
+                onClick={() => goToPage(currentPage - 1)}
+              >
+                <l-icon name="arrow-left" aria-hidden="true" /> Previous
               </button>
-            </div>
+              {Array.from({ length: pageCount }, (_, index) => index + 1).map((number) => (
+                <button
+                  key={number}
+                  type="button"
+                  className="page-number"
+                  aria-label={`Page ${number}`}
+                  aria-current={number === currentPage ? "page" : undefined}
+                  onClick={() => goToPage(number)}
+                >
+                  {number}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="page-nav"
+                disabled={currentPage === pageCount}
+                onClick={() => goToPage(currentPage + 1)}
+              >
+                Next <l-icon name="arrow-right" aria-hidden="true" />
+              </button>
+            </nav>
           )}
         </div>
       </div>
