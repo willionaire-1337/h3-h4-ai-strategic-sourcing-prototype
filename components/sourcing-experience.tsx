@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AskBlock } from "@/components/ask-block";
 import { DeepDrawGate } from "@/components/deep-draw-gate";
-import { RegisterGate } from "@/components/register-gate";
 import { SiteNavbar } from "@/components/site-navbar";
 import { SupplierResults } from "@/components/supplier-results";
 import { ThinkingIndicator } from "@/components/thinking-indicator";
@@ -31,13 +30,6 @@ import { CATEGORY_LABEL, CATEGORY_SUPPLIER_COUNT } from "@/lib/suppliers";
 
 const OPT_OUT_HINT =
   "Opt out of the Thomas Agent experience and go back to Thomas Classic sourcing";
-
-/**
- * The stall rule's "reasonable number of questions": a broad category that
- * hasn't refined below the shortlist target after this many asks completes
- * gracefully with the best set it has rather than asking on.
- */
-const MAX_ASKS = 8;
 
 type TranscriptEntry =
   | { kind: "user"; id: number; text: string }
@@ -103,8 +95,6 @@ export function SourcingExperience() {
    * so the buyer can scan the run and jump back into a question.
    */
   const [browseAsks, setBrowseAsks] = useState(false);
-  /** Registration gate over the whole page, up until the buyer signs in. */
-  const [gateOpen, setGateOpen] = useState(true);
   /** Deep Drawing hand-off confirm, opened from the process question. */
   const [deepDrawGateOpen, setDeepDrawGateOpen] = useState(false);
   /** Left pane width in px; dragged via the divider. */
@@ -217,10 +207,9 @@ export function SourcingExperience() {
         const matched = simulatedMatchCount(currentAnswers);
         const ask = matched > SHORTLIST_TARGET ? nextAsk(currentAnswers) : null;
         setTranscript((entries) => {
-          // Stall rule: after a reasonable number of questions a category
-          // that won't refine below the target completes gracefully.
-          const asked = entries.filter((entry) => entry.kind === "ask").length;
-          if (ask && asked < MAX_ASKS) {
+          // Every question worth asking gets asked — the run only completes
+          // when the match set is refined or no refining question remains.
+          if (ask) {
             return [...entries, { kind: "ask" as const, id: nextId(), ask, status: "active" as const }];
           }
           // Sized to what the rail actually shows, so the completion copy and
@@ -660,7 +649,6 @@ export function SourcingExperience() {
 
   return (
     <div className="app-shell">
-      <RegisterGate open={gateOpen} onDismiss={() => setGateOpen(false)} />
       <DeepDrawGate
         open={deepDrawGateOpen}
         onConfirm={() => {
