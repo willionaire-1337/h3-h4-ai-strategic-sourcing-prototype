@@ -137,6 +137,348 @@ p,
   text-decoration: underline;
 }
 
+/* Contact Supplier dialog: reuses the gate scrim, but the card reads as a
+   form — left-aligned, with a segmented inquiry/quote toggle up top. */
+.contact-modal {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: calc(100dvh - var(--l-space-5) * 2);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-4);
+  background: #fff;
+  border-radius: var(--l-radius-2, 12px);
+  box-shadow: 0 24px 64px rgb(9 44 71 / 0.28);
+  padding: var(--l-space-6, 32px);
+  text-align: left;
+}
+
+.contact-title {
+  font-size: 24px;
+  font-weight: var(--l-font-weight-semibold);
+  line-height: 1.2;
+  color: var(--l-color-darkblue-100);
+  /* Keep long supplier names clear of the close button. */
+  padding-right: var(--l-space-6);
+}
+
+/* Multi-recipient pills: mini monogram logo + name in a gray outline. */
+.contact-recipient-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-1);
+  background: #fff;
+  font-size: var(--l-font-size-smallest);
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-90);
+}
+
+.contact-recipient-logo {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-1);
+  background: var(--l-color-blue-5);
+  font-size: 9px;
+  font-weight: var(--l-font-weight-bold);
+  color: var(--l-color-blue-100);
+}
+
+/* Logged answers tucked into a closed-by-default Tailoft accordion. */
+.contact-reqs-accordion {
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-1);
+  overflow: hidden;
+}
+
+.contact-reqs-accordion:not([open]) > summary {
+  border-bottom: none;
+}
+
+.contact-reqs-accordion .contact-reqs-list {
+  padding: var(--l-space-3);
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-4);
+}
+
+/* Direct child only, so the dropzone's inner label keeps Tailoft's look. */
+.contact-form fieldset > label {
+  font-size: var(--l-font-size-smaller);
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-100);
+}
+
+/* Tailoft sizes inputs at 34px; the dialog fields run a touch taller. */
+.contact-form fieldset :is(input:not([type="file"]), select) {
+  height: 40px;
+}
+
+.contact-form l-fileupload {
+  border-radius: var(--l-radius-1);
+}
+
+/* Inside a fieldset, Tailoft's `fieldset label` reset (padding: 0, display:
+   block) outranks the dropzone's own label styles, pressing the cloud icon
+   against the top border — restore the stacked layout and padding. */
+.contact-form l-fileupload label {
+  display: flex;
+  flex-direction: column;
+  /* Tailoft's 4px reads cramped between the cloud icon and the prompt. */
+  gap: calc(var(--l-space-1) + 2px);
+  padding-top: var(--l-space-4);
+  font-size: var(--l-font-size-small);
+}
+
+/* The accept-type line is a 24px line box drawn into the zero-height file
+   input's bottom padding; Tailoft's 16px padding can't contain it, so the
+   text hangs below the dropzone border. Size the padding to fit the line
+   plus breathing room, and drop the margin so the band stays even. */
+.contact-form l-fileupload input[type="file"] {
+  margin-bottom: 0;
+  padding-bottom: var(--l-space-8);
+  /* Kill the native "No file chosen" text that overflows the zero-height
+     input; the accept-type ::before sets its own font-size so it survives. */
+  font-size: 0;
+  /* Tailoft's generic `fieldset input` styling paints the input white with
+     its own border, masking the dropzone's blue tint behind the accept-type
+     line — let the parent's background show through instead. */
+  background: transparent;
+  border: 0;
+}
+
+/* The accept-type line inherits a 24px line box; the extra leading pushes it
+   further from the prompt than the prompt sits from the icon. Match the
+   label's 18px line so the three rows read evenly spaced. */
+.contact-form l-fileupload input[type="file"]::before {
+  line-height: var(--l-font-lineheight-2);
+}
+
+/* Attached files listed under the dropzone. */
+.contact-form l-filepreview {
+  border: 1px solid var(--l-color-border);
+  border-radius: var(--l-radius-1);
+}
+
+.contact-form-row {
+  display: flex;
+  gap: var(--l-space-3);
+}
+
+.contact-form-row fieldset {
+  flex: 1;
+}
+
+/* Left-rail answers echoed on the quote form, and the recipient list shown
+   when a message goes to several selected suppliers — both label + chips. */
+.contact-reqs,
+.contact-recipients {
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-2);
+}
+
+.contact-reqs-title {
+  font-size: var(--l-font-size-smaller);
+  font-weight: var(--l-font-weight-semibold);
+  color: var(--l-color-darkblue-100);
+}
+
+.contact-reqs-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--l-space-2);
+}
+
+.contact-req-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: var(--l-radius-1);
+  background: var(--l-color-blue-10);
+  color: var(--l-color-blue-100);
+  font-size: 12px;
+  font-weight: var(--l-font-weight-semibold);
+}
+
+.contact-req-label {
+  font-size: 10px;
+  font-weight: var(--l-font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--l-color-darkblue-75);
+}
+
+.contact-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-3);
+  margin-top: var(--l-space-1);
+}
+
+/* Consent line on the quote form: pre-checked, but still a real control. */
+.contact-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--l-space-2);
+  font-size: var(--l-font-size-smaller);
+  color: var(--l-color-darkblue-75);
+  cursor: pointer;
+}
+
+.contact-consent input {
+  width: 16px;
+  height: 16px;
+  /* Centers the box on the first line of the consent copy. */
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: var(--l-color-blue-100);
+}
+
+.contact-actions button[kind="primary"] {
+  margin-left: auto;
+  flex-shrink: 0;
+  height: 44px;
+  padding: 0 var(--l-space-5);
+}
+
+.contact-note {
+  font-size: var(--l-font-size-smallest);
+  color: var(--l-color-darkblue-75);
+}
+
+/* Post-submit view: confirmation header plus a preview of the email the
+   supplier receives, so the buyer sees exactly what went out. */
+.contact-sent {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--l-space-4);
+  text-align: left;
+}
+
+.contact-sent-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--l-space-3);
+}
+
+.contact-sent-head l-icon {
+  font-size: 32px;
+  color: var(--l-color-green-100, #1a7f37);
+}
+
+/* Confirmation footer: link to the supplier's inbox tab, then Done. */
+.contact-sent-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--l-space-3);
+}
+
+.contact-sent-actions button[kind="primary"] {
+  padding: 0 var(--l-space-6);
+}
+
+.contact-sent-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  height: 40px;
+  padding: 0 var(--l-space-4);
+  border: 1px solid var(--l-color-blue-100);
+  border-radius: var(--l-radius-1);
+  color: var(--l-color-blue-100);
+  font-size: var(--l-font-size-smaller);
+  font-weight: var(--l-font-weight-semibold);
+  text-decoration: none;
+}
+
+.contact-sent-link:hover {
+  background: var(--l-color-blue-5, #f2f7fd);
+}
+
+/* ---- Email content, rendered on the /supplier-email Gmail page. ---- */
+
+/* The buyer's project description, quoted like forwarded text. */
+.contact-email-desc {
+  padding: var(--l-space-2) var(--l-space-3);
+  border-left: 3px solid var(--l-color-blue-100);
+  background: var(--l-color-blue-5, #f2f7fd);
+  border-radius: 0 var(--l-radius-1) var(--l-radius-1) 0;
+}
+
+.contact-email-reqs {
+  padding-left: var(--l-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Supplier CTAs split the row evenly, edge to edge. */
+.contact-email-ctas {
+  display: flex;
+  gap: var(--l-space-3);
+  padding-top: var(--l-space-1);
+}
+
+.contact-email-cta-primary,
+.contact-email-cta-ghost {
+  flex: 1;
+  height: 40px;
+  padding: 0 var(--l-space-5);
+  border-radius: var(--l-radius-1);
+  font-family: inherit;
+  font-size: var(--l-font-size-smaller);
+  font-weight: var(--l-font-weight-semibold);
+  cursor: pointer;
+}
+
+.contact-email-cta-primary {
+  border: none;
+  background: var(--l-color-blue-100);
+  color: #fff;
+}
+
+.contact-email-cta-ghost {
+  border: 1px solid var(--l-color-border);
+  background: #fff;
+  color: var(--l-color-darkblue-100);
+}
+
+/* The reply-directly promise — the email's key affordance, so it gets an
+   envelope and semibold weight rather than footnote styling. */
+.contact-email-reply {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--l-space-2);
+  font-weight: var(--l-font-weight-semibold);
+}
+
+.contact-email-reply l-icon {
+  margin-top: 2px;
+  color: var(--l-color-blue-100);
+}
+
+.contact-email-foot {
+  padding: var(--l-space-3) var(--l-space-4);
+  border-radius: var(--l-radius-1);
+  background: var(--l-color-blue-5, #f2f7fd);
+  font-size: var(--l-font-size-smallest);
+  color: var(--l-color-blue-100);
+}
+
 /* Top navigation + category search, after the Thomas SRP header. */
 .site-nav {
   background: #fff;
@@ -1573,6 +1915,43 @@ p,
   background: #fff;
 }
 
+/* Quick Contact floats over the bottom-right corner of the results list.
+   The dock is a zero-height sticky strip so it overlays the cards instead
+   of adding a band under them. */
+.quick-contact-dock {
+  position: sticky;
+  bottom: var(--l-space-5);
+  height: 0;
+  display: flex;
+  /* Centered under the list, clear of the Exit Agent pill on the right. */
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.quick-contact {
+  pointer-events: auto;
+  transform: translateY(-100%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  height: 40px;
+  padding: 0 var(--l-space-4);
+  border: 1px solid var(--l-color-blue-100);
+  border-radius: var(--l-radius-1);
+  background: #fff;
+  color: var(--l-color-blue-100);
+  font-family: inherit;
+  font-size: var(--l-font-size-small);
+  font-weight: var(--l-font-weight-semibold);
+  box-shadow: 0 6px 16px rgba(9, 44, 71, 0.18);
+  cursor: pointer;
+}
+
+.quick-contact:hover {
+  background: var(--l-color-blue-5);
+}
+
 /* Pagination at the foot of the supplier list. */
 .pagination {
   display: flex;
@@ -1669,10 +2048,32 @@ p,
   font-size: var(--l-font-size-smaller);
 }
 
-/* Main CTA on the card. */
-.supplier-card button[kind="primary"] {
+/* Main CTA on the card, and the contact secondary sitting to its left. */
+.supplier-card button[kind="primary"],
+.supplier-card .card-contact {
   height: 44px;
   padding: 0 var(--l-space-5);
+}
+
+/* Tailoft's icon map carries no envelope; the Font Awesome face it ships
+   does, so the glyph is mapped here the same way the vendored CSS does. */
+l-icon[name="envelope"]::before {
+  content: "\f0e0";
+}
+
+/* Contact Supplier reads as a tinted secondary: blue-on-blue-10, no border. */
+.card-contact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--l-space-2);
+  border: none;
+  background: var(--l-color-blue-10);
+  color: var(--l-color-blue-100);
+}
+
+.card-contact:hover {
+  background: var(--l-color-blue-25, #c3d9f0);
 }
 
 /* Supplier tile — the two-up variant: same content blocks as the card, stacked
@@ -1703,11 +2104,17 @@ p,
 }
 
 /* Last block in the tile, pushed to the floor so CTAs line up across a row
-   even when the tiles above them run to different heights. */
-.tile-cta {
-  width: 100%;
-  height: 44px;
+   even when the tiles above them run to different heights. Contact splits
+   the row with the website CTA. */
+.tile-cta-row {
+  display: flex;
+  gap: var(--l-space-2);
   margin-top: auto;
+}
+
+.tile-cta-row button {
+  flex: 1;
+  height: 44px;
 }
 
 .tile-facts {
@@ -2257,6 +2664,7 @@ p,
     grid-template-areas:
       "logo save select"
       "identity identity identity"
+      "contact contact contact"
       "cta cta cta";
     row-gap: var(--l-space-3);
     column-gap: var(--l-space-1);
@@ -2287,6 +2695,12 @@ p,
 
   .supplier-card .card-head .card-select {
     grid-area: select;
+  }
+
+  .supplier-card .card-head .card-contact {
+    grid-area: contact;
+    width: 100%;
+    height: 44px;
   }
 
   .supplier-card .card-head .card-cta {
@@ -2440,5 +2854,289 @@ p,
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+/* ---- /supplier-email: the supplier's Gmail-style inbox. Chrome only —
+   the email body reuses the .contact-email-* content styles above. ---- */
+
+.gm-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f6f8fc;
+  color: #202124;
+  font-size: var(--l-font-size-small);
+}
+
+.gm-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-3);
+  padding: var(--l-space-2) var(--l-space-4);
+}
+
+.gm-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  margin-right: var(--l-space-6);
+  font-size: 22px;
+  color: #5f6368;
+}
+
+.gm-logo {
+  width: 30px;
+  height: 23px;
+}
+
+.gm-search {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-3);
+  flex: 1;
+  max-width: 620px;
+  height: 46px;
+  padding: 0 var(--l-space-4);
+  border-radius: 24px;
+  background: #e9eef6;
+  color: #5f6368;
+}
+
+.gm-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  margin-left: auto;
+}
+
+.gm-iconbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #5f6368;
+  font-size: var(--l-font-size-base);
+  cursor: pointer;
+}
+
+.gm-iconbtn:hover {
+  background: rgb(32 33 36 / 0.08);
+}
+
+/* The signed-in supplier's avatar. */
+.gm-account {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1a73e8;
+  color: #fff;
+  font-weight: var(--l-font-weight-bold);
+}
+
+.gm-main {
+  flex: 1;
+  display: flex;
+  gap: var(--l-space-4);
+  padding: 0 var(--l-space-4) var(--l-space-4) var(--l-space-2);
+}
+
+.gm-rail {
+  width: 232px;
+  flex-shrink: 0;
+  padding-top: var(--l-space-2);
+}
+
+.gm-compose {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--l-space-3);
+  height: 52px;
+  padding: 0 var(--l-space-5);
+  margin: 0 0 var(--l-space-4) var(--l-space-2);
+  border: none;
+  border-radius: 16px;
+  background: #c2e7ff;
+  color: #001d35;
+  font-family: inherit;
+  font-size: var(--l-font-size-small);
+  font-weight: var(--l-font-weight-semibold);
+  box-shadow: 0 1px 3px rgb(60 64 67 / 0.3);
+  cursor: pointer;
+}
+
+.gm-rail-nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.gm-rail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-4);
+  height: 32px;
+  padding: 0 var(--l-space-3) 0 var(--l-space-5);
+  border-radius: 0 16px 16px 0;
+  color: #202124;
+  font-size: var(--l-font-size-smaller);
+  cursor: pointer;
+}
+
+.gm-rail-item:hover {
+  background: rgb(32 33 36 / 0.08);
+}
+
+.gm-rail-item[data-active] {
+  background: #d3e3fd;
+  font-weight: var(--l-font-weight-bold);
+}
+
+.gm-rail-count {
+  margin-left: auto;
+  font-size: var(--l-font-size-smallest);
+}
+
+/* The open message. */
+.gm-message {
+  flex: 1;
+  min-width: 0;
+  max-width: 1032px;
+  padding: var(--l-space-3) var(--l-space-6) var(--l-space-6);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.gm-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-1);
+  padding-bottom: var(--l-space-2);
+  border-bottom: 1px solid #e8eaed;
+  margin-bottom: var(--l-space-4);
+}
+
+.gm-subject {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-3);
+  margin: 0 0 var(--l-space-4);
+  padding-left: 52px;
+  font-size: 22px;
+  font-weight: var(--l-font-weight-regular);
+  color: #1f1f1f;
+}
+
+.gm-chip {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #e8eaed;
+  color: #5f6368;
+  font-size: var(--l-font-size-smallest);
+  font-weight: var(--l-font-weight-regular);
+}
+
+.gm-sender {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--l-space-3);
+  margin-bottom: var(--l-space-4);
+}
+
+/* Thomas sends the email, so it wears the sender avatar. */
+.gm-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--l-color-blue-100);
+  color: #fff;
+  font-weight: var(--l-font-weight-bold);
+}
+
+.gm-sender-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--l-font-size-smaller);
+}
+
+.gm-address {
+  color: #5f6368;
+  font-size: var(--l-font-size-smallest);
+}
+
+.gm-sender-side {
+  display: flex;
+  align-items: center;
+  gap: var(--l-space-3);
+  margin-left: auto;
+  color: #5f6368;
+  font-size: var(--l-font-size-smallest);
+  white-space: nowrap;
+}
+
+/* The email itself, indented under the avatar like Gmail lays out a thread. */
+.gm-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--l-space-3);
+  padding-left: 52px;
+  /* Wide enough that a full description + requirements list stays short. */
+  max-width: 768px;
+  font-size: var(--l-font-size-smaller);
+  color: var(--l-color-darkblue-100);
+}
+
+.gm-reply-row {
+  display: flex;
+  gap: var(--l-space-3);
+  margin-top: var(--l-space-5);
+  padding-left: 52px;
+}
+
+.gm-reply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--l-space-2);
+  height: 36px;
+  padding: 0 var(--l-space-5);
+  border: 1px solid #747775;
+  border-radius: 18px;
+  background: #fff;
+  color: #444746;
+  font-family: inherit;
+  font-size: var(--l-font-size-smaller);
+  font-weight: var(--l-font-weight-semibold);
+  cursor: pointer;
+}
+
+.gm-reply-btn:hover {
+  background: rgb(32 33 36 / 0.05);
+}
+
+.gm-empty {
+  padding: var(--l-space-6);
+  color: #5f6368;
+}
+
+@media (max-width: 900px) {
+  .gm-rail {
+    display: none;
+  }
+
+  .gm-subject,
+  .gm-body,
+  .gm-reply-row {
+    padding-left: 0;
   }
 }
