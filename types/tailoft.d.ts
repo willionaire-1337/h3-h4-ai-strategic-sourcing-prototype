@@ -141,6 +141,7 @@ export type TailoftIcon = CustomElement<{
     | "earth-europe"
     | "ellipsis"
     | "ellipsis-vertical"
+    | "envelope"
     | "eye"
     | "eye-slash"
     | "file-arrow-down"

@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { ContactSupplierModal } from "@/components/contact-supplier-modal";
 import { FilterDrawer, type FilterGroup } from "@/components/filter-drawer";
 import { SupplierCard } from "@/components/supplier-card";
 import {
@@ -26,6 +27,8 @@ import { CATEGORY_SUPPLIER_COUNT, type Supplier } from "@/lib/suppliers";
 const PAGE_SIZE = 25;
 /** Suppliers one quote request can go out to. */
 const SELECTION_LIMIT = 5;
+/** Quick Contact addresses the highest-ranked suppliers without selecting. */
+const QUICK_CONTACT_COUNT = 10;
 
 /** Short uppercase label shown above each answer chip in the results header. */
 const FACET_LABELS: Record<string, string> = {
@@ -78,6 +81,13 @@ export function SupplierResults({
   const [partnerOnly, setPartnerOnly] = useState(false);
   /** Local-only facets (no questionnaire twin) — e.g. company type. */
   const [localFacetPicks, setLocalFacetPicks] = useState<Record<string, string[]>>({});
+  /** Contact dialog recipients — the clicked card's supplier plus everyone
+      selected; null card means the selection bar opened it. */
+  const [contactFor, setContactFor] = useState<Supplier | null>(null);
+  const [contactOpen, setContactOpen] = useState(false);
+  /** Quick Contact floods the dialog with the top-ranked suppliers instead
+      of the manual selection. */
+  const [quickContact, setQuickContact] = useState(false);
   /** Soft shadow under the sticky header once the results list has scrolled. */
   const [scrolled, setScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -278,6 +288,13 @@ export function SupplierResults({
     value: answer.values.join(", "),
   }));
 
+  // Logged answers echoed on the contact modal's quote form, sentence-cased
+  // since they sit inline rather than as tiny chip headers.
+  const requirements = facets.map((facet) => ({
+    label: facet.label.charAt(0) + facet.label.slice(1).toLowerCase(),
+    value: facet.value,
+  }));
+
   const atSelectionLimit = selected.size >= SELECTION_LIMIT;
 
   const toggleIn = (set: Set<string>, id: string): Set<string> => {
@@ -285,6 +302,29 @@ export function SupplierResults({
     if (next.has(id)) next.delete(id);
     else next.add(id);
     return next;
+  };
+
+  const selectedSuppliers = results.filter((supplier) => selected.has(supplier.id));
+
+  // A card's contact button messages that supplier plus everyone selected, so
+  // the dialog always lists the full recipient set. Quick Contact skips the
+  // manual selection entirely and takes the best-ranked suppliers.
+  const contactRecipients = quickContact
+    ? results.slice(0, QUICK_CONTACT_COUNT)
+    : contactFor && !selected.has(contactFor.id)
+      ? [contactFor, ...selectedSuppliers]
+      : selectedSuppliers;
+
+  const openContact = (supplier: Supplier | null) => {
+    setQuickContact(false);
+    setContactFor(supplier);
+    setContactOpen(true);
+  };
+
+  const openQuickContact = () => {
+    setQuickContact(true);
+    setContactFor(null);
+    setContactOpen(true);
   };
 
   return (
@@ -360,6 +400,7 @@ export function SupplierResults({
                 selectDisabled={atSelectionLimit && !selected.has(supplier.id)}
                 onToggleSave={() => setSaved((set) => toggleIn(set, supplier.id))}
                 onToggleSelect={() => setSelected((set) => toggleIn(set, supplier.id))}
+                onContact={() => openContact(supplier)}
               />
             </Fragment>
           ))}
@@ -404,6 +445,13 @@ export function SupplierResults({
             </nav>
           )}
         </div>
+        {results.length > 0 && (
+          <div className="quick-contact-dock">
+            <button type="button" className="quick-contact" onClick={openQuickContact}>
+              <l-icon name="sparkles" fill aria-hidden="true" /> Auto Contact Top Suppliers
+            </button>
+          </div>
+        )}
       </div>
 
       {selected.size > 0 && (
@@ -428,7 +476,7 @@ export function SupplierResults({
               ))}
           </div>
           <div className="footer-actions">
-            <button kind="primary" scale="small">
+            <button kind="primary" scale="small" onClick={() => openContact(null)}>
               Request Quote
             </button>
             <button type="button" className="footer-ghost">
@@ -437,6 +485,16 @@ export function SupplierResults({
           </div>
         </div>
       )}
+
+      <ContactSupplierModal
+        suppliers={contactRecipients}
+        open={contactOpen}
+        onClose={() => {
+          setContactOpen(false);
+          setQuickContact(false);
+        }}
+        requirements={requirements}
+      />
 
       <FilterDrawer
         open={filtersOpen}

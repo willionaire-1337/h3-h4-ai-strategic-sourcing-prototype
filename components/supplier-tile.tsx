@@ -1,7 +1,13 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
+import {
+  ContactSupplierModal,
+  type ContactRequirement,
+} from "@/components/contact-supplier-modal";
 import { CapabilityRow, MediaTile, monogram, noop } from "@/components/supplier-card";
+import { BASE_PATH } from "@/lib/base-path";
 import type { Supplier } from "@/lib/suppliers";
 
 type SupplierTileProps = {
@@ -10,6 +16,8 @@ type SupplierTileProps = {
   selected: boolean;
   /** Set once the quote request is full, so only deselection stays open. */
   selectDisabled?: boolean;
+  /** Logged left-rail answers, echoed on the contact modal's quote form. */
+  requirements?: ContactRequirement[];
   onToggleSave: () => void;
   onToggleSelect: () => void;
 };
@@ -24,9 +32,11 @@ export function SupplierTile({
   saved,
   selected,
   selectDisabled,
+  requirements,
   onToggleSave,
   onToggleSelect,
 }: SupplierTileProps) {
+  const [contactOpen, setContactOpen] = useState(false);
   const stats = [
     { label: "Established", value: supplier.founded?.toString() },
     { label: "Revenue", value: supplier.revenue },
@@ -46,7 +56,7 @@ export function SupplierTile({
             </a>
             {supplier.verified && (
               <Image
-                src="/verified-badge.png"
+                src={`${BASE_PATH}/verified-badge.png`}
                 width={18}
                 height={18}
                 alt="Verified supplier"
@@ -116,9 +126,21 @@ export function SupplierTile({
         </div>
       )}
 
-      <button kind="primary" className="tile-cta" onClick={noop}>
-        Visit Website <l-icon name="arrow-up-right-from-square" />
-      </button>
+      <div className="tile-cta-row">
+        <button kind="neutral" className="card-contact" onClick={() => setContactOpen(true)}>
+          <l-icon name="envelope" fill /> Contact Supplier
+        </button>
+        <button kind="primary" onClick={noop}>
+          Visit Website <l-icon name="arrow-up-right-from-square" />
+        </button>
+      </div>
+
+      <ContactSupplierModal
+        suppliers={[supplier]}
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        requirements={requirements}
+      />
     </l-panel>
   );
 }

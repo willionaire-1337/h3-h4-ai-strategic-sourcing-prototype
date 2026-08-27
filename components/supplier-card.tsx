@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useLayoutEffect, useRef, useState } from "react";
+import { BASE_PATH } from "@/lib/base-path";
 import type { Supplier } from "@/lib/suppliers";
 
 type SupplierCardProps = {
@@ -12,6 +13,9 @@ type SupplierCardProps = {
   selectDisabled?: boolean;
   onToggleSave: () => void;
   onToggleSelect: () => void;
+  /** Opens the contact dialog; the results list owns it so every selected
+      supplier can be addressed at once. */
+  onContact: () => void;
 };
 
 export function monogram(name: string): string {
@@ -112,6 +116,7 @@ export function SupplierCard({
   selectDisabled,
   onToggleSave,
   onToggleSelect,
+  onContact,
 }: SupplierCardProps) {
   const [expanded, setExpanded] = useState(false);
   const clampable = supplier.description.length > 180;
@@ -131,7 +136,7 @@ export function SupplierCard({
             </a>
             {supplier.verified && (
               <Image
-                src="/verified-badge.png"
+                src={`${BASE_PATH}/verified-badge.png`}
                 width={18}
                 height={18}
                 alt="Verified supplier"
@@ -167,6 +172,9 @@ export function SupplierCard({
           >
             <l-icon name={selected ? "circle-check" : "circle-plus"} />{" "}
             <span className="card-action-label">{selected ? "Selected" : "Select"}</span>
+          </button>
+          <button kind="neutral" scale="small" className="card-contact" onClick={onContact}>
+            <l-icon name="envelope" fill /> Contact Supplier
           </button>
           <button kind="primary" scale="small" className="card-cta" onClick={noop}>
             Visit Website <l-icon name="arrow-up-right-from-square" />

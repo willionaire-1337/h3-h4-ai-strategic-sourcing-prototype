@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { BASE_PATH } from "@/lib/base-path";
 
 const noop = (event: React.MouseEvent) => event.preventDefault();
 
@@ -30,7 +31,13 @@ export function SiteNavbar({ query, onSearch }: SiteNavbarProps) {
     <header className="site-nav">
       <nav className="site-nav-row">
         <a href="#" className="site-logo" onClick={noop} aria-label="Thomas">
-          <Image src="/thomas-wordmark.png" width={119} height={24} alt="Thomas" priority />
+          <Image
+            src={`${BASE_PATH}/thomas-wordmark.png`}
+            width={119}
+            height={24}
+            alt="Thomas"
+            priority
+          />
         </a>
         <div className="site-nav-links">
           <a href="#" onClick={noop}>

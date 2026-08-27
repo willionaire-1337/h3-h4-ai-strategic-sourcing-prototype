@@ -1,0 +1,88 @@
+---
+description: Living notebook for the H3/H4 AI strategic sourcing prototype
+alwaysApply: false
+---
+
+# H3/H4 AI Strategic Sourcing Prototype — notebook
+
+## Current status
+
+- Next.js 16 prototype of AI-assisted supplier discovery for Stamping Services,
+  styled with the vendored Tailoft design system (`public/tailoft/`).
+- Supplier results render as full-width cards (`supplier-card.tsx`); a two-up
+  tile variant (`supplier-tile.tsx`) exists but is not currently mounted.
+
+## Key decisions
+
+- 2026-08-20 (William Johnson, via agent): Added a "Contact Supplier" secondary
+  CTA to the left of "Visit Website" on supplier cards and tiles. It opens
+  `contact-supplier-modal.tsx`: a "Contact {Supplier}" dialog with a General
+  Inquiry / Request Quote toggle. General Inquiry carries an inquiry-type
+  dropdown; Request Quote carries description/quantity/date fields. Submission
+  is simulated (confirmation state only) — no backend.
+- Modals follow the existing scrim + card pattern (`gate-scrim`); forms use
+  plain `<fieldset>` markup so Tailoft styles labels/inputs natively.
+- 2026-08-20 (William Johnson, mock provided): Contact Supplier CTA styled as a
+  tinted secondary — blue-10 fill, blue-100 text, no border, solid envelope
+  icon. Tailoft's icon map lacks an envelope, so `globals.css` maps
+  `l-icon[name="envelope"]` to the Font Awesome glyph (f0e0) the vendored
+  fonts already carry.
+- 2026-08-20 (William Johnson): Multi-recipient quote requests show a
+  "Sending to" row below Estimated quantity / Response needed by: gray-outline
+  pills, each with a mini monogram tile (suppliers have no image logos) plus
+  the name. Hidden for single-recipient sends. The old top-of-dialog chip row
+  was removed.
+- 2026-08-20 (William Johnson): The Project name field is auto-seeded by
+  `buildProjectName` — first material + first process + part, title-styled
+  (e.g. "Aluminum Progressive Die Brackets"). No recipient in the name (was
+  briefly "… — NN, Inc.", removed same day). Editable defaultValue, same
+  no-AI template rules.
+- 2026-08-20 (William Johnson): The contact dialog is quote-only — the General
+  Inquiry tab was removed. The project description is pre-drafted from logged
+  answers by `buildProjectDescription` (pure template rules, no AI; bracket
+  use case hardcodes "brackets" unless a Part type answer exists). The
+  requirement pills moved into a closed-by-default Tailoft
+  `details kind="accordion"` labeled "Your requirements (n)".
+- 2026-08-20 (William Johnson): The quote form has an Attachments module built
+  from Tailoft's own `l-fileupload` (dashed dropzone, shows accepted types) and
+  `l-filepreview` (name/size/remove slots). Files live in modal state only —
+  prototype, nothing uploads. Accepted: .pdf, .step, .iges, .dxf, .dwg, .zip.
+- 2026-08-20 (William Johnson): The contact dialog addresses multiple
+  suppliers — `SupplierResults` owns the single modal instance and passes the
+  recipient set (clicked card's supplier + all selected). Multi-recipient view
+  titles "Contact N Suppliers" with a "Sending to" chip list. The selection
+  bar's Request Quote button opens the same dialog on the quote tab.
+- 2026-08-20 (William Johnson): The supplier-facing email lives on its own
+  Gmail-style page at `/supplier-email` (was an inline preview in the dialog).
+  Submitting the quote form stashes a `QuoteEmailPayload` in localStorage
+  (`supplier-email-preview`), opens the page in a new tab, and flips the
+  dialog to a compact "Quote request sent" confirmation with a "View supplier
+  email" link. The page renders full Gmail chrome (topbar, search, compose,
+  rail, subject + Inbox chip, sender row from Thomas <quotes@thomasnet.com>,
+  Reply/Forward). Email body: buyer persona (Sarah Mitchell, Meridian
+  Dynamics), light-blue quoted project description, requirements list,
+  full-width "Not interested" / "View contact details" CTAs, reply-directly
+  note, and a light-blue blue-text "Sent via Thomas on behalf of…" footer.
+  Body copy says "through Thomas" (was Xometry). For multi-supplier sends the
+  page shows the copy addressed to the first recipient.
+- 2026-08-20 (William Johnson): Request Quote form fields are Project name,
+  Project description, a "Your requirements" chip list echoing logged
+  left-rail answers (threaded from `SupplierResults` via the card), Estimated
+  quantity, Response needed by, and a pre-checked required consent checkbox
+  ("…agree to share your project and contact details") in place of the
+  "sent directly" note.
+- 2026-08-20 (William Johnson): The contact dialog's submit button is labeled
+  "Send Inquiry" (was "Request Quote"). The results-footer button that opens
+  the dialog still says "Request Quote".
+- 2026-08-20 (William Johnson): A floating "Quick Contact" CTA (white pill,
+  blue outline/text, sparkles icon) docks sticky to the bottom-right of the
+  results list, above the Exit Agent pill. Clicking it opens the contact
+  dialog preloaded with the top 10 ranked suppliers (`QUICK_CONTACT_COUNT`),
+  bypassing the 5-supplier manual selection.
+
+## Open threads
+
+- Contact form submissions go nowhere (prototype); wire up if/when a backend
+  exists.
+- Inquiry-type dropdown options are first-pass ideas — confirm the list with
+  design/product.

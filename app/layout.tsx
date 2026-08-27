@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BASE_PATH } from "@/lib/base-path";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,9 +17,9 @@ export default function RootLayout({
     <html lang="en">
       <head>
         {/* Tailoft design system, vendored from xometry/tailoft (standalone = components + utilities) */}
-        <link rel="stylesheet" href="/tailoft/tailoft.standalone.css" />
+        <link rel="stylesheet" href={`${BASE_PATH}/tailoft/tailoft.standalone.css`} />
         {/* Tailoft spacing/typography/color helpers (mar-*, pad-*, txt-*, …) ship separately. */}
-        <link rel="stylesheet" href="/tailoft/utility-classes.css" />
+        <link rel="stylesheet" href={`${BASE_PATH}/tailoft/utility-classes.css`} />
       </head>
       <body>{children}</body>
     </html>
